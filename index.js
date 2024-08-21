@@ -9,7 +9,7 @@ const { NotFoundError } = require("./utils/errors"); // Import the custom errors
 dotenv.config();
 
 const app = express();
-
+app.set("trust proxy", 1);
 // Middleware
 app.use(morgan("dev"));
 app.use(express.json());
@@ -52,16 +52,12 @@ app.get("/", (req, res) => {
 });
 
 // Connect to MongoDB
+console.log("Attempting to connect to MongoDB...");
 mongoose
-  .connect(process.env.MONGO_URI, {
-    poolSize: 10,
-  })
-  .then(() => {
-    console.log("Connected to MongoDB");
-  })
-  .catch((err) => {
-    console.error("Failed to connect to MongoDB", err);
-  });
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("Connected to MongoDB"))
+  .catch((err) => console.error("MongoDB connection error:", err));
+
 
 // Enhanced error handling middleware
 app.use((err, req, res, next) => {
