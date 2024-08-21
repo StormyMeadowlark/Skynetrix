@@ -2,7 +2,10 @@ const express = require("express");
 const mongoose = require("mongoose");
 const morgan = require("morgan");
 const dotenv = require("dotenv");
+const rateLimiter = require("./middleware/rateLimiterMiddleware");
 const apiKeyMiddleware = require("./middleware/apiKeyMiddleware");
+const { NotFoundError } = require("./utils/errors"); // Import the custom errors
+
 dotenv.config();
 
 const app = express();
@@ -10,6 +13,7 @@ const app = express();
 // Middleware
 app.use(morgan("dev"));
 app.use(express.json());
+app.use(rateLimiter); // Apply the rate limiter to all requests
 
 // Routes
 const adminRoutes = require("./routes/adminRoutes");
@@ -59,6 +63,31 @@ mongoose
   .catch((err) => {
     console.error("Failed to connect to MongoDB", err);
   });
+
+// Enhanced error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+
+  // Handle specific error types
+  if (err.name === "ValidationError") {
+    return res
+      .status(err.statusCode)
+      .json({ message: err.message, errors: err.errors });
+  }
+
+  if (err.name === "UnauthorizedError") {
+    return res.status(err.statusCode).json({ message: err.message });
+  }
+
+  if (err.name === "NotFoundError") {
+    return res.status(err.statusCode).json({ message: err.message });
+  }
+
+  // Default to 500 if no specific error handler is matched
+  res.status(err.statusCode || 500).json({
+    message: err.message || "Internal Server Error",
+  });
+});
 
 module.exports = app; // Export the app for testing and other uses
 
