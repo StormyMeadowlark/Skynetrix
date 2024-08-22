@@ -7,14 +7,33 @@ const USERS_SERVICE_URL =
   "http://localhost:5000/api/users"; // Update this URL to match your setup
 
 // Forward requests to User Management Service
+const express = require("express");
+const router = express.Router();
+const axios = require("axios");
+
+const USERS_SERVICE_URL =
+  process.env.USERS_SERVICE_URL ||
+  "http://localhost:5000/api/users"; // Update this URL to match your setup
+
+// Forward requests to User Management Service
 router.post("/register", async (req, res) => {
   try {
     const url = `${USERS_SERVICE_URL}/register`;
 
+    // Log the request body and headers for debugging
+    console.log("Forwarding registration request with body:", req.body);
+    console.log("Headers:", req.headers);
+
+    // Set up headers including x-api-key and Authorization if needed
+    const headers = {
+      "Content-Type": "application/json",
+    };
+
     // Forward the registration request to the User Management Service
-    const response = await axios.post(url, req.body, {
-      headers: req.headers, // Forward all incoming headers
-    });
+    const response = await axios.post(url, req.body, { headers });
+
+    // Send email asynchronously
+    sendEmail(newUser.email, ...).catch(console.error); // Adjust the email sending logic as needed
 
     // Send the response back to the client
     res.status(response.status).json(response.data);
@@ -39,6 +58,8 @@ router.post("/register", async (req, res) => {
     res.status(status).json(data);
   }
 });
+
+module.exports = router;
 
 
 
