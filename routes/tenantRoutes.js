@@ -1,17 +1,17 @@
-// routes/tenantRoutes.js
-
 const express = require("express");
 const router = express.Router();
 const axios = require("axios");
 
+// Base URL for the Tenant Management Service
 const TENANT_SERVICE_URL =
-  process.env.TENANT_SERVICE_URL || "http://localhost:5000/api/tenants"; // Adjust the URL to point to your Tenant Management Service
+  process.env.TENANT_SERVICE_URL || "http://localhost:5000/api/tenants";
+
+// Middleware for forwarding requests to the Tenant Management Service
 
 // Forward request to create a tenant
 router.post("/", async (req, res) => {
   try {
     const url = `${TENANT_SERVICE_URL}`;
-    console.log("Creating tenant with data:", req.body);
     const response = await axios.post(url, req.body, {
       headers: {
         Authorization: req.header("Authorization"),
@@ -44,6 +44,10 @@ router.get("/", async (req, res) => {
     });
     res.status(response.status).json(response.data);
   } catch (error) {
+    console.error(
+      "Error details:",
+      error.response ? error.response.data : error.message
+    );
     const status = error.response ? error.response.status : 500;
     const data = error.response
       ? error.response.data
@@ -64,6 +68,10 @@ router.get("/:id", async (req, res) => {
     });
     res.status(response.status).json(response.data);
   } catch (error) {
+    console.error(
+      "Error details:",
+      error.response ? error.response.data : error.message
+    );
     const status = error.response ? error.response.status : 500;
     const data = error.response
       ? error.response.data
@@ -84,6 +92,10 @@ router.put("/:id", async (req, res) => {
     });
     res.status(response.status).json(response.data);
   } catch (error) {
+    console.error(
+      "Error details:",
+      error.response ? error.response.data : error.message
+    );
     const status = error.response ? error.response.status : 500;
     const data = error.response
       ? error.response.data
@@ -104,6 +116,10 @@ router.delete("/:id", async (req, res) => {
     });
     res.status(response.status).json(response.data);
   } catch (error) {
+    console.error(
+      "Error details:",
+      error.response ? error.response.data : error.message
+    );
     const status = error.response ? error.response.status : 500;
     const data = error.response
       ? error.response.data

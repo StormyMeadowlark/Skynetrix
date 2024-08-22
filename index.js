@@ -4,7 +4,7 @@ const morgan = require("morgan");
 const dotenv = require("dotenv");
 const rateLimiter = require("./middleware/rateLimiterMiddleware");
 const apiKeyMiddleware = require("./middleware/apiKeyMiddleware");
-const { NotFoundError } = require("./utils/errors"); // Import the custom errors
+// Import the custom errors
 
 dotenv.config();
 

@@ -10,22 +10,37 @@ const USERS_SERVICE_URL =
 router.post("/register", async (req, res) => {
   try {
     const url = `${USERS_SERVICE_URL}/register`;
+
+    // Forward the registration request to the User Management Service
     const response = await axios.post(url, req.body, {
-      headers: {
-        Authorization: req.header("Authorization"),
-        "x-api-key": req.header("x-api-key"),
-      },
+      headers: req.headers, // Forward all incoming headers
     });
+
+    // Send the response back to the client
     res.status(response.status).json(response.data);
   } catch (error) {
+    // Enhanced error logging
     console.error("Error forwarding registration request:", error.message);
+
+    if (error.response) {
+      console.error("Error details:", error.response.data);
+      console.error("Status code:", error.response.status);
+      console.error("Headers:", error.response.headers);
+    } else {
+      console.error("Error without response object:", error.message);
+    }
+
+    // Handle errors and return the appropriate status and message
     const status = error.response ? error.response.status : 500;
     const data = error.response
       ? error.response.data
       : { message: "Error connecting to the User Management Service" };
+
     res.status(status).json(data);
   }
 });
+
+
 
 // Forward requests for logging in a user
 router.post("/login", async (req, res) => {

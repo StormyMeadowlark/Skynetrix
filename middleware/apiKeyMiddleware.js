@@ -1,5 +1,3 @@
-const Tenant = require("../models/Tenant");
-
 const apiKeyMiddleware = async (req, res, next) => {
   const apiKey = req.headers["x-api-key"];
 
