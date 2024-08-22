@@ -11,29 +11,8 @@ router.post("/register", async (req, res) => {
   try {
     const url = `${USERS_SERVICE_URL}/register`;
 
-    // Log the request body and headers for debugging
-    console.log("Forwarding registration request with body:", req.body);
-    console.log("Headers:", req.headers);
-
-    // Set up headers including x-api-key and Authorization if needed
-    const headers = {
-      "Content-Type": "application/json",
-    };
-
     // Forward the registration request to the User Management Service
-    const response = await axios.post(url, req.body, { headers });
-
-    // Assume that the response contains the user object and tenant info
-    const { email, tenant } = req.body;
-
-    // Send verification email
-    await sendEmail(
-      email,
-      tenant.verifiedSenderEmail,
-      "Email Verification",
-      `Please verify your email by clicking on the following link:\n\n${response.data.verificationUrl}`,
-      tenant.sendGridApiKey
-    );
+    const response = await axios.post(url, req.body);
 
     // Send success response back to the client
     res.status(response.status).json({
@@ -42,22 +21,14 @@ router.post("/register", async (req, res) => {
     });
   } catch (error) {
     // Enhanced error logging
-    console.error("Error forwarding registration request:", error.message);
+    console.error("Error forwarding registration request:", error);
 
-    if (error.response) {
-      console.error("Error details:", error.response.data);
-      console.error("Status code:", error.response.status);
-      console.error("Headers:", error.response.headers);
-    } else {
-      console.error("Error without response object:", error.message);
-    }
-
-    // Handle errors and return the appropriate status and message
     const status = error.response ? error.response.status : 500;
     const data = error.response
       ? error.response.data
       : { message: "Error connecting to the User Management Service" };
 
+    // Return the error response to the client
     res.status(status).json(data);
   }
 });
