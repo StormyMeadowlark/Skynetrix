@@ -7,15 +7,6 @@ const USERS_SERVICE_URL =
   "http://localhost:5000/api/users"; // Update this URL to match your setup
 
 // Forward requests to User Management Service
-const express = require("express");
-const router = express.Router();
-const axios = require("axios");
-
-const USERS_SERVICE_URL =
-  process.env.USERS_SERVICE_URL ||
-  "http://localhost:5000/api/users"; // Update this URL to match your setup
-
-// Forward requests to User Management Service
 router.post("/register", async (req, res) => {
   try {
     const url = `${USERS_SERVICE_URL}/register`;
@@ -33,7 +24,13 @@ router.post("/register", async (req, res) => {
     const response = await axios.post(url, req.body, { headers });
 
     // Send email asynchronously
-    sendEmail(newUser.email, ...).catch(console.error); // Adjust the email sending logic as needed
+    sendEmail(
+      newUser.email,
+      tenantObj.verifiedSenderEmail,
+      "Email Verification",
+      `Please verify your email by clicking on the following link:\n\n${verificationUrl}`,
+      tenantObj.sendGridApiKey
+    ).catch(console.error); // Adjust the email sending logic as needed
 
     // Send the response back to the client
     res.status(response.status).json(response.data);
@@ -58,8 +55,6 @@ router.post("/register", async (req, res) => {
     res.status(status).json(data);
   }
 });
-
-module.exports = router;
 
 
 
