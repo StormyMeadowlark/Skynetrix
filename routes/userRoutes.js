@@ -23,17 +23,23 @@ router.post("/register", async (req, res) => {
     // Forward the registration request to the User Management Service
     const response = await axios.post(url, req.body, { headers });
 
-    // Send email asynchronously
-    sendEmail(
-      newUser.email,
-      tenantObj.verifiedSenderEmail,
-      "Email Verification",
-      `Please verify your email by clicking on the following link:\n\n${verificationUrl}`,
-      tenantObj.sendGridApiKey
-    ).catch(console.error); // Adjust the email sending logic as needed
+    // Assume that the response contains the user object and tenant info
+    const { email, tenant } = req.body;
 
-    // Send the response back to the client
-    res.status(response.status).json(response.data);
+    // Send verification email
+    await sendEmail(
+      email,
+      tenant.verifiedSenderEmail,
+      "Email Verification",
+      `Please verify your email by clicking on the following link:\n\n${response.data.verificationUrl}`,
+      tenant.sendGridApiKey
+    );
+
+    // Send success response back to the client
+    res.status(response.status).json({
+      message: "User registered and email sent successfully.",
+      data: response.data,
+    });
   } catch (error) {
     // Enhanced error logging
     console.error("Error forwarding registration request:", error.message);
