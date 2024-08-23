@@ -4,6 +4,7 @@ const morgan = require("morgan");
 const dotenv = require("dotenv");
 const rateLimiter = require("./middleware/rateLimiterMiddleware");
 const apiKeyMiddleware = require("./middleware/apiKeyMiddleware");
+const tenantMiddleware = require("./middleware/tenantMiddleware");
 // Import the custom errors
 
 dotenv.config();
@@ -13,7 +14,8 @@ app.set("trust proxy", 1);
 // Middleware
 app.use(morgan("dev"));
 app.use(express.json());
-app.use(rateLimiter); // Apply the rate limiter to all requests
+app.use(rateLimiter);
+app.use(tenantMiddleware); // Apply the rate limiter to all requests
 
 // Routes
 const adminRoutes = require("./routes/adminRoutes");
@@ -41,16 +43,19 @@ app.use("/api/v1/media", mediaRoutes); // Protected route
 app.use("/api/v1/analytics", apiKeyMiddleware, analyticsRoutes); // Protected route
 app.use("/api/v1/categories", apiKeyMiddleware, categoryRoutes); // Protected route
 app.use("/api/v1/comments", apiKeyMiddleware, commentRoutes); // Protected route
-app.use("/api/v1/newsletters", apiKeyMiddleware, newsletterRoutes); // Protected route
+app.use("/api/v1/newsletters", newsletterRoutes); // Protected route
 app.use("/api/v1/posts", postRoutes); // Protected route
 app.use("/api/v1/social-media", apiKeyMiddleware, socialMediaRoutes); // Protected route
 app.use("/api/v1/tags", apiKeyMiddleware, tagRoutes);
 
 // Basic route to ensure the server is running
 app.get("/", (req, res) => {
-  res.send("API Gateway is running.");
+  res.send(
+    `API Gateway is running. Tenant: ${
+      req.tenant ? req.tenant.name : "Unknown"
+    }`
+  );
 });
-
 // Connect to MongoDB
 console.log("Attempting to connect to MongoDB...");
 mongoose
