@@ -21,7 +21,7 @@ router.post("/register", async (req, res) => {
     });
   } catch (error) {
     // Enhanced error logging
-    console.error("Error forwarding registration request:", error);
+    console.error("Error forwarding registration request:", error.message);
 
     const status = error.response ? error.response.status : 500;
     const data = error.response
@@ -32,7 +32,6 @@ router.post("/register", async (req, res) => {
     res.status(status).json(data);
   }
 });
-
 
 
 // Forward requests for logging in a user
