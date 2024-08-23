@@ -127,5 +127,34 @@ router.delete("/:id", async (req, res) => {
     res.status(status).json(data);
   }
 });
+router.post(
+  "/regenerate-api-key/:tenantId",
+  async (req, res) => {
+    try {
+      const url = `${TENANT_SERVICE_URL}/regenerate-api-key/${req.params.tenantId}`;
+
+      // Forward the request to the Tenant Management Service
+      const response = await axios.post(url, req.body, {
+        headers: {
+          Authorization: req.header("Authorization"),
+        },
+      });
+
+      // Send success response back to the client
+      res.status(response.status).json(response.data);
+    } catch (error) {
+      // Enhanced error logging
+      console.error("Error forwarding API key regeneration request:", error);
+
+      const status = error.response ? error.response.status : 500;
+      const data = error.response
+        ? error.response.data
+        : { message: "Error connecting to the Tenant Management Service" };
+
+      // Return the error response to the client
+      res.status(status).json(data);
+    }
+  }
+);
 
 module.exports = router;
