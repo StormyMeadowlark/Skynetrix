@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const axios = require("axios");
-const tenantMiddleware = require("../middleware/tenantMiddleware"); 
+const tenantMiddleware = require("../middleware/tenantMiddleware")
 
 const USERS_SERVICE_URL =
   process.env.USERS_SERVICE_URL || "http://localhost:5000/api/users";
@@ -12,10 +12,14 @@ router.use(tenantMiddleware);
 // Forward requests to User Management Service
 
 // Register a new user
-router.post("/register", async (req, res) => {
+router.post("/:tenantId/register", async (req, res) => {
   try {
     const url = `${USERS_SERVICE_URL}/${req.tenantId}/register`;
-    const response = await axios.post(url, req.body);
+    const response = await axios.post(url, req.body, {
+      headers: {
+        "X-Tenant-Id": req.headers["x-tenant-id"], // Forward the X-Tenant-Id header
+      },
+    });
     res.status(response.status).json({
       message: "User registered and email sent successfully.",
       data: response.data,
@@ -31,12 +35,14 @@ router.post("/register", async (req, res) => {
 });
 
 // Login a user
-router.post("/login", async (req, res) => {
+router.post("/:tenantId/login", async (req, res) => {
   try {
-    const response = await axios.post(
-      `${USERS_SERVICE_URL}/${req.tenantId}/login`,
-      req.body
-    );
+    const url = `${USERS_SERVICE_URL}/${req.tenantId}/login`;
+    const response = await axios.post(url, req.body, {
+      headers: {
+        "X-Tenant-Id": req.headers["x-tenant-id"], // Forward the X-Tenant-Id header
+      },
+    });
     res.status(response.status).json(response.data);
   } catch (error) {
     const status = error.response ? error.response.status : 500;
@@ -47,12 +53,16 @@ router.post("/login", async (req, res) => {
   }
 });
 
+
 // Verify a user's email
-router.get("/verify-email/:token", async (req, res) => {
+router.get("/:tenantId/verify-email/:token", async (req, res) => {
   try {
-    const response = await axios.get(
-      `${USERS_SERVICE_URL}/${req.tenantId}/verify-email/${req.params.token}`
-    );
+    const url = `${USERS_SERVICE_URL}/${req.params.tenantId}/verify-email/${req.params.token}`;
+    const response = await axios.get(url, {
+      headers: {
+        "X-Tenant-Id": req.headers["x-tenant-id"], // Forward the X-Tenant-Id header
+      },
+    });
     res.status(response.status).json(response.data);
   } catch (error) {
     const status = error.response ? error.response.status : 500;
@@ -64,7 +74,7 @@ router.get("/verify-email/:token", async (req, res) => {
 });
 
 // Get a user's profile
-router.get("/profile", async (req, res) => {
+router.get("/:tenantId/profile", async (req, res) => {
   try {
     const response = await axios.get(
       `${USERS_SERVICE_URL}/${req.tenantId}/profile`,
@@ -85,7 +95,7 @@ router.get("/profile", async (req, res) => {
 });
 
 // Update a user's profile
-router.put("/profile", async (req, res) => {
+router.put("/:tenantId/profile", async (req, res) => {
   try {
     const response = await axios.put(
       `${USERS_SERVICE_URL}/${req.tenantId}/profile`,
@@ -107,7 +117,7 @@ router.put("/profile", async (req, res) => {
 });
 
 // Delete a user
-router.delete("/:id", async (req, res) => {
+router.delete("/:tenantId/:id", async (req, res) => {
   try {
     const response = await axios.delete(
       `${USERS_SERVICE_URL}/${req.tenantId}/${req.params.id}`,
@@ -128,7 +138,7 @@ router.delete("/:id", async (req, res) => {
 });
 
 // Generate an API key for a user
-router.post("/generate-api-key/:userId", async (req, res) => {
+router.post("/:tenantId/generate-api-key/:userId", async (req, res) => {
   try {
     const response = await axios.post(
       `${USERS_SERVICE_URL}/${req.tenantId}/generate-api-key/${req.params.userId}`,
@@ -150,7 +160,7 @@ router.post("/generate-api-key/:userId", async (req, res) => {
 });
 
 // Change a user's password
-router.put("/change-password", async (req, res) => {
+router.put("/:tenantId/change-password", async (req, res) => {
   try {
     const response = await axios.put(
       `${USERS_SERVICE_URL}/${req.tenantId}/change-password`,
@@ -172,7 +182,7 @@ router.put("/change-password", async (req, res) => {
 });
 
 // Forgot password request
-router.post("/forgot-password", async (req, res) => {
+router.post("/:tenantId/forgot-password", async (req, res) => {
   try {
     const response = await axios.post(
       `${USERS_SERVICE_URL}/${req.tenantId}/forgot-password`,
@@ -189,7 +199,7 @@ router.post("/forgot-password", async (req, res) => {
 });
 
 // Reset password
-router.post("/reset-password", async (req, res) => {
+router.post("/:tenantId/reset-password", async (req, res) => {
   try {
     const response = await axios.post(
       `${USERS_SERVICE_URL}/${req.tenantId}/reset-password`,
@@ -206,7 +216,7 @@ router.post("/reset-password", async (req, res) => {
 });
 
 // Logout a user
-router.post("/logout", async (req, res) => {
+router.post("/:tenantId/logout", async (req, res) => {
   try {
     console.log("Logout request received in API Gateway");
     console.log("Authorization Header:", req.header("Authorization"));
@@ -233,7 +243,7 @@ router.post("/logout", async (req, res) => {
 });
 
 // Search for users
-router.get("/search", async (req, res) => {
+router.get("/:tenantId/search", async (req, res) => {
   try {
     const response = await axios.get(
       `${USERS_SERVICE_URL}/${req.tenantId}/search`,
@@ -255,7 +265,7 @@ router.get("/search", async (req, res) => {
 });
 
 // Resend verification email
-router.post("/resend-verification-email", async (req, res) => {
+router.post("/:tenantId/resend-verification-email", async (req, res) => {
   try {
     const response = await axios.post(
       `${USERS_SERVICE_URL}/${req.tenantId}/resend-verification-email`,
@@ -277,7 +287,7 @@ router.post("/resend-verification-email", async (req, res) => {
 });
 
 // Upload profile picture
-router.post("/upload-profile-picture", async (req, res) => {
+router.post("/:tenantId/upload-profile-picture", async (req, res) => {
   try {
     const response = await axios.post(
       `${USERS_SERVICE_URL}/${req.tenantId}/upload-profile-picture`,
