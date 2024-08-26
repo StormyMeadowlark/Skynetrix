@@ -57,21 +57,27 @@ router.post("/:tenantId/login", async (req, res) => {
 // Verify a user's email
 router.get("/:tenantId/verify-email/:token", async (req, res) => {
   try {
-    const url = `${USERS_SERVICE_URL}/${req.params.tenantId}/verify-email/${req.params.token}`;
+    const { tenantId, token } = req.params;
+    const url = `${USERS_SERVICE_URL}/${tenantId}/verify-email/${token}`;
+
+    // Forward the request to the User Management Service
     const response = await axios.get(url, {
       headers: {
-        "X-Tenant-Id": req.headers["x-tenant-id"], // Forward the X-Tenant-Id header
+        "X-Tenant-Id": tenantId,
       },
     });
+
     res.status(response.status).json(response.data);
   } catch (error) {
+    console.error("Error forwarding verification request:", error.message);
     const status = error.response ? error.response.status : 500;
     const data = error.response
       ? error.response.data
-      : { message: "Error connecting to User Management Service" };
+      : { message: "Error connecting to the User Management Service" };
     res.status(status).json(data);
   }
 });
+
 
 // Get a user's profile
 router.get("/:tenantId/profile", async (req, res) => {
