@@ -144,13 +144,14 @@ router.post("/:tenantId/reset-password", async (req, res) => {
 router.post("/:tenantId/logout", async (req, res) => {
   try {
     const url = `${USERS_SERVICE_URL}/${req.params.tenantId}/logout`;
-    const response = await axios.post(url, req.body, {
-      headers: {
-        Authorization: req.header("Authorization"), // Forward the Authorization header
-      },
-    });
+    const response = await axios.post(
+      url,
+      req.body,
+      getHeaders(req.params.tenantId)
+    );
     res.status(response.status).json(response.data);
   } catch (error) {
+    console.error("Error forwarding logout request:", error.message);
     const status = error.response ? error.response.status : 500;
     const data = error.response
       ? error.response.data
