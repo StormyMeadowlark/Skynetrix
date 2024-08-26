@@ -151,6 +151,7 @@ router.post("/:tenantId/logout", async (req, res) => {
     );
     res.status(response.status).json(response.data);
   } catch (error) {
+    console.error("Error forwarding logout request:", error.message);
     const status = error.response ? error.response.status : 500;
     const data = error.response
       ? error.response.data
