@@ -11,6 +11,7 @@ router.use(tenantMiddleware);
 const getHeaders = (tenantId) => ({
   headers: {
     "X-Tenant-Id": tenantId,
+    Authorization:token,
   },
 });
 // Forward requests to User Management Service
@@ -68,10 +69,14 @@ router.get("/:tenantId/verify-email/:token", async (req, res) => {
 // Get a user's profile
 router.get("/:tenantId/profile", async (req, res) => {
   try {
-    const url = `${USERS_SERVICE_URL}/${req.params.tenantId}/profile`;
-    const response = await axios.get(url, getHeaders(req.params.tenantId));
+    const tenantId = req.params.tenantId;
+    const token = req.header("Authorization"); // Extract Authorization token
+    const url = `${USERS_SERVICE_URL}/${tenantId}/profile`;
+
+    const response = await axios.get(url, getHeaders(tenantId, token)); // Pass headers with Authorization token
     res.status(response.status).json(response.data);
   } catch (error) {
+    console.error("Error forwarding get user profile request:", error.message);
     const status = error.response ? error.response.status : 500;
     const data = error.response
       ? error.response.data
@@ -79,6 +84,7 @@ router.get("/:tenantId/profile", async (req, res) => {
     res.status(status).json(data);
   }
 });
+
 
 // Update a user's profile
 router.put("/:tenantId/profile", async (req, res) => {
