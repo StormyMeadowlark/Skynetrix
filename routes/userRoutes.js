@@ -58,14 +58,10 @@ router.post("/:tenantId/login", async (req, res) => {
 router.get("/:tenantId/verify-email/:token", async (req, res) => {
   try {
     const { tenantId, token } = req.params;
-    const url = `${USERS_SERVICE_URL}/${tenantId}/verify-email/${token}`;
+    const url = `${USERS_SERVICE_URL}/:tenantId/verify-email/${token}`;
 
     // Forward the request to the User Management Service
-    const response = await axios.get(url, {
-      headers: {
-        "X-Tenant-Id": tenantId,
-      },
-    });
+    const response = await axios.get(url);
 
     res.status(response.status).json(response.data);
   } catch (error) {
