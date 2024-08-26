@@ -38,11 +38,14 @@ router.post("/:tenantId/register", async (req, res) => {
 
 // Login a user
 router.post("/:tenantId/login", async (req, res) => {
+  const tenantId = req.params.tenantId;
+  const url = `${USERS_SERVICE_URL}/${tenantId}/login`;
+
   try {
-    const url = `${USERS_SERVICE_URL}/${req.params.tenantId}/login`;
-    const response = await axios.post(url, req.body, getHeaders(req.params.tenantId));
+    const response = await axios.post(url, req.body, getHeaders(tenantId));
     res.status(response.status).json(response.data);
   } catch (error) {
+    console.error("Error forwarding login request:", error.message);
     const status = error.response ? error.response.status : 500;
     const data = error.response
       ? error.response.data
