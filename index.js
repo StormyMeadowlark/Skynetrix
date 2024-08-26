@@ -32,23 +32,23 @@ const socialMediaRoutes = require("./routes/socialMediaRoutes");
 const tagRoutes = require("./routes/tagRoutes");
 
 // Integrate the user management routes
-app.use("/api/v1/:tenantid", tenantRoutes); // Protected route
-app.use("/api/v1/:tenantid/keys", apiKeyRoutes); // Protected route
-app.use("/api/v1/:tenantid/admin", adminRoutes); // Protected route
-app.use("/api/v1/:tenantid/users", userRoutes); // Protect user-related routes
-app.use("/api/v1/:tenantid/media", mediaRoutes); // Protected route
+app.use("/api/v1", tenantRoutes); // Protected route
+app.use("/api/v1/keys", apiKeyRoutes); // Protected route
+app.use("/api/v1/admin", adminRoutes); // Protected route
+app.use("/api/v1/users", userRoutes); // Protect user-related routes
+app.use("/api/v1/media", mediaRoutes); // Protected route
 
 // CMS-related routes
-app.use("/api/v1/:tenantid/analytics", apiKeyMiddleware, analyticsRoutes); // Protected route
-app.use("/api/v1/:tenantid/categories", apiKeyMiddleware, categoryRoutes); // Protected route
-app.use("/api/v1/:tenantid/comments", apiKeyMiddleware, commentRoutes); // Protected route
-app.use("/api/v1/:tenantid/newsletters", newsletterRoutes); // Protected route
-app.use("/api/v1/:tenantid/posts", postRoutes); // Protected route
-app.use("/api/v1/:tenantid/social-media", apiKeyMiddleware, socialMediaRoutes); // Protected route
-app.use("/api/v1/:tenantid/tags", apiKeyMiddleware, tagRoutes);
+app.use("/api/v1/analytics", apiKeyMiddleware, analyticsRoutes); // Protected route
+app.use("/api/v1/categories", apiKeyMiddleware, categoryRoutes); // Protected route
+app.use("/api/v1/comments", apiKeyMiddleware, commentRoutes); // Protected route
+app.use("/api/v1/newsletters", newsletterRoutes); // Protected route
+app.use("/api/v1/posts", postRoutes); // Protected route
+app.use("/api/v1/social-media", apiKeyMiddleware, socialMediaRoutes); // Protected route
+app.use("/api/v1/tags", apiKeyMiddleware, tagRoutes);
 
 // Basic route to ensure the server is running
-app.get("/:tenantid", (req, res) => {
+app.get("", (req, res) => {
   res.send(
     `API Gateway is running. Tenant: ${
       req.tenant ? req.tenant.name : "Unknown"
