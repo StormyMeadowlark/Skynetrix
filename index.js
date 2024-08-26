@@ -4,18 +4,17 @@ const morgan = require("morgan");
 const dotenv = require("dotenv");
 const rateLimiter = require("./middleware/rateLimiterMiddleware");
 const apiKeyMiddleware = require("./middleware/apiKeyMiddleware");
-const tenantMiddleware = require("./middleware/tenantMiddleware");
-// Import the custom errors
+// Remove tenantMiddleware since it's now applied in specific routes
 
 dotenv.config();
 
 const app = express();
 app.set("trust proxy", 1);
+
 // Middleware
 app.use(morgan("dev"));
 app.use(express.json());
-app.use(rateLimiter);
-app.use(tenantMiddleware); // Apply the rate limiter to all requests
+app.use(rateLimiter); // Apply the rate limiter to all requests
 
 // Routes
 const adminRoutes = require("./routes/adminRoutes");
@@ -33,36 +32,36 @@ const socialMediaRoutes = require("./routes/socialMediaRoutes");
 const tagRoutes = require("./routes/tagRoutes");
 
 // Integrate the user management routes
-app.use("/api/v1/tenants", tenantRoutes); // Protected route
-app.use("/api/v1/keys", apiKeyRoutes); // Protected route
-app.use("/api/v1/admin", adminRoutes); // Protected route
-app.use("/api/v1/users", userRoutes); // Protect user-related routes
-app.use("/api/v1/media", mediaRoutes); // Protected route
+app.use("/api/v1/:tenantid", tenantRoutes); // Protected route
+app.use("/api/v1/:tenantid/keys", apiKeyRoutes); // Protected route
+app.use("/api/v1/:tenantid/admin", adminRoutes); // Protected route
+app.use("/api/v1/:tenantid/users", userRoutes); // Protect user-related routes
+app.use("/api/v1/:tenantid/media", mediaRoutes); // Protected route
 
 // CMS-related routes
-app.use("/api/v1/analytics", apiKeyMiddleware, analyticsRoutes); // Protected route
-app.use("/api/v1/categories", apiKeyMiddleware, categoryRoutes); // Protected route
-app.use("/api/v1/comments", apiKeyMiddleware, commentRoutes); // Protected route
-app.use("/api/v1/newsletters", newsletterRoutes); // Protected route
-app.use("/api/v1/posts", postRoutes); // Protected route
-app.use("/api/v1/social-media", apiKeyMiddleware, socialMediaRoutes); // Protected route
-app.use("/api/v1/tags", apiKeyMiddleware, tagRoutes);
+app.use("/api/v1/:tenantid/analytics", apiKeyMiddleware, analyticsRoutes); // Protected route
+app.use("/api/v1/:tenantid/categories", apiKeyMiddleware, categoryRoutes); // Protected route
+app.use("/api/v1/:tenantid/comments", apiKeyMiddleware, commentRoutes); // Protected route
+app.use("/api/v1/:tenantid/newsletters", newsletterRoutes); // Protected route
+app.use("/api/v1/:tenantid/posts", postRoutes); // Protected route
+app.use("/api/v1/:tenantid/social-media", apiKeyMiddleware, socialMediaRoutes); // Protected route
+app.use("/api/v1/:tenantid/tags", apiKeyMiddleware, tagRoutes);
 
 // Basic route to ensure the server is running
-app.get("/", (req, res) => {
+app.get("/:tenantid", (req, res) => {
   res.send(
     `API Gateway is running. Tenant: ${
       req.tenant ? req.tenant.name : "Unknown"
     }`
   );
 });
+
 // Connect to MongoDB
 console.log("Attempting to connect to MongoDB...");
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error("MongoDB connection error:", err));
-
 
 // Enhanced error handling middleware
 app.use((err, req, res, next) => {

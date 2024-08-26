@@ -1,24 +1,33 @@
 const express = require("express");
 const router = express.Router();
 const axios = require("axios");
-const authMiddleware = require("../middleware/authMiddleware")
+const authMiddleware = require("../middleware/authMiddleware"); // Import the auth middleware
+const tenantMiddleware = require("../middleware/tenantMiddleware"); // Import the tenant middleware
 
 const POST_SERVICE_URL =
   process.env.POST_SERVICE_URL || "http://localhost:5000/api/posts";
 
-// Forward request to create a new post
-// routes/postRoutes.js or the equivalent file where the post creation is handled
-router.post("/", authMiddleware, async (req, res) => {
+// Apply tenantMiddleware globally to ensure all routes are tenant-specific
+router.use("/:tenantId/*", tenantMiddleware);
+
+// Routes for Post Management Service
+
+// Create a new post (secured route)
+router.post("/:tenantId/", authMiddleware, async (req, res) => {
   try {
     console.log("Token being sent:", req.header("Authorization"));
 
     const requestBody = req.body;
 
-    const response = await axios.post(`${POST_SERVICE_URL}/`, requestBody, {
-      headers: {
-        Authorization: req.header("Authorization"), // Forwarding the token
-      },
-    });
+    const response = await axios.post(
+      `${POST_SERVICE_URL}/${req.tenantId}/`,
+      requestBody,
+      {
+        headers: {
+          Authorization: req.header("Authorization"), // Forwarding the token
+        },
+      }
+    );
 
     res.status(response.status).json(response.data);
   } catch (error) {
@@ -31,10 +40,10 @@ router.post("/", authMiddleware, async (req, res) => {
   }
 });
 
-// Forward request to get all posts (published)
-router.get("/", async (req, res) => {
+// Get all posts (published) for a specific tenant
+router.get("/:tenantId/", async (req, res) => {
   try {
-    const response = await axios.get(`${POST_SERVICE_URL}/`);
+    const response = await axios.get(`${POST_SERVICE_URL}/${req.tenantId}/`);
     res.status(response.status).json(response.data);
   } catch (error) {
     console.error("Error forwarding get all posts request:", error.message);
@@ -46,10 +55,12 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Forward request to get a post by ID
-router.get("/:id", async (req, res) => {
+// Get a specific post by ID for a specific tenant
+router.get("/:tenantId/:id", async (req, res) => {
   try {
-    const response = await axios.get(`${POST_SERVICE_URL}/${req.params.id}`);
+    const response = await axios.get(
+      `${POST_SERVICE_URL}/${req.tenantId}/${req.params.id}`
+    );
     res.status(response.status).json(response.data);
   } catch (error) {
     console.error("Error forwarding get post by ID request:", error.message);
@@ -61,11 +72,11 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Forward request to update a post
-router.put("/:id", async (req, res) => {
+// Update a post (secured route)
+router.put("/:tenantId/:id", authMiddleware, async (req, res) => {
   try {
     const response = await axios.put(
-      `${POST_SERVICE_URL}/${req.params.id}`,
+      `${POST_SERVICE_URL}/${req.tenantId}/${req.params.id}`,
       req.body,
       {
         headers: {
@@ -84,11 +95,11 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// Forward request to delete a post
-router.delete("/:id", async (req, res) => {
+// Delete a post (secured route)
+router.delete("/:tenantId/:id", authMiddleware, async (req, res) => {
   try {
     const response = await axios.delete(
-      `${POST_SERVICE_URL}/${req.params.id}`,
+      `${POST_SERVICE_URL}/${req.tenantId}/${req.params.id}`,
       {
         headers: {
           Authorization: req.header("Authorization"),
@@ -106,11 +117,11 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-// Forward request to publish a post
-router.post("/:id/publish", async (req, res) => {
+// Publish a post (secured route)
+router.post("/:tenantId/:id/publish", authMiddleware, async (req, res) => {
   try {
     const response = await axios.post(
-      `${POST_SERVICE_URL}/${req.params.id}/publish`,
+      `${POST_SERVICE_URL}/${req.tenantId}/${req.params.id}/publish`,
       req.body,
       {
         headers: {
@@ -129,11 +140,11 @@ router.post("/:id/publish", async (req, res) => {
   }
 });
 
-// Forward request to unpublish a post
-router.post("/:id/unpublish", async (req, res) => {
+// Unpublish a post (secured route)
+router.post("/:tenantId/:id/unpublish", authMiddleware, async (req, res) => {
   try {
     const response = await axios.post(
-      `${POST_SERVICE_URL}/${req.params.id}/unpublish`,
+      `${POST_SERVICE_URL}/${req.tenantId}/${req.params.id}/unpublish`,
       req.body,
       {
         headers: {
@@ -152,11 +163,11 @@ router.post("/:id/unpublish", async (req, res) => {
   }
 });
 
-// Forward request to like a post
-router.post("/:postId/like", async (req, res) => {
+// Like a post (secured route)
+router.post("/:tenantId/:postId/like", authMiddleware, async (req, res) => {
   try {
     const response = await axios.post(
-      `${POST_SERVICE_URL}/${req.params.postId}/like`,
+      `${POST_SERVICE_URL}/${req.tenantId}/${req.params.postId}/like`,
       req.body,
       {
         headers: {
@@ -175,11 +186,11 @@ router.post("/:postId/like", async (req, res) => {
   }
 });
 
-// Forward request to dislike a post
-router.post("/:postId/dislike", async (req, res) => {
+// Dislike a post (secured route)
+router.post("/:tenantId/:postId/dislike", authMiddleware, async (req, res) => {
   try {
     const response = await axios.post(
-      `${POST_SERVICE_URL}/${req.params.postId}/dislike`,
+      `${POST_SERVICE_URL}/${req.tenantId}/${req.params.postId}/dislike`,
       req.body,
       {
         headers: {

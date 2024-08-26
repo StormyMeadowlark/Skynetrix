@@ -1,179 +1,225 @@
 const express = require("express");
 const router = express.Router();
 const axios = require("axios");
+const tenantIdMiddleware = require("../middleware/tenantMiddleware"); // Adjust the path as necessary
 
 const USERS_SERVICE_URL =
-  process.env.USERS_SERVICE_URL ||
-  "http://localhost:5000/api/users"; // Update this URL to match your setup
+  process.env.USERS_SERVICE_URL || "http://localhost:5000/api/users";
+
+// Apply the tenant middleware to all routes that include :tenantId
+router.use("/:tenantId/*", tenantIdMiddleware);
 
 // Forward requests to User Management Service
-router.post("/register", async (req, res) => {
+
+// Register a new user
+router.post("/:tenantId/register", async (req, res) => {
   try {
-    const url = `${USERS_SERVICE_URL}/register`;
-
-    // Forward the registration request to the User Management Service
+    const url = `${USERS_SERVICE_URL}/${req.tenantId}/register`;
     const response = await axios.post(url, req.body);
-
-    // Send success response back to the client
     res.status(response.status).json({
       message: "User registered and email sent successfully.",
       data: response.data,
     });
   } catch (error) {
-    // Enhanced error logging
     console.error("Error forwarding registration request:", error.message);
-
     const status = error.response ? error.response.status : 500;
     const data = error.response
       ? error.response.data
       : { message: "Error connecting to the User Management Service" };
-
-    // Return the error response to the client
     res.status(status).json(data);
   }
 });
 
-
-// Forward requests for logging in a user
-router.post("/login", async (req, res) => {
+// Login a user
+router.post("/:tenantId/login", async (req, res) => {
   try {
-    const response = await axios.post(`${USERS_SERVICE_URL}/login`, req.body);
+    const response = await axios.post(
+      `${USERS_SERVICE_URL}/${req.tenantId}/login`,
+      req.body
+    );
     res.status(response.status).json(response.data);
   } catch (error) {
     const status = error.response ? error.response.status : 500;
-    const data = error.response ? error.response.data : { message: "Error connecting to User Management Service" };
+    const data = error.response
+      ? error.response.data
+      : { message: "Error connecting to User Management Service" };
     res.status(status).json(data);
   }
 });
 
-// Forward requests for verifying email
-router.get("/verify-email/:token", async (req, res) => {
+// Verify a user's email
+router.get("/:tenantId/verify-email/:token", async (req, res) => {
   try {
-    const response = await axios.get(`${USERS_SERVICE_URL}/verify-email/${req.params.token}`);
+    const response = await axios.get(
+      `${USERS_SERVICE_URL}/${req.tenantId}/verify-email/${req.params.token}`
+    );
     res.status(response.status).json(response.data);
   } catch (error) {
     const status = error.response ? error.response.status : 500;
-    const data = error.response ? error.response.data : { message: "Error connecting to User Management Service" };
+    const data = error.response
+      ? error.response.data
+      : { message: "Error connecting to User Management Service" };
     res.status(status).json(data);
   }
 });
 
-// Forward requests for getting user profile
-router.get("/profile", async (req, res) => {
+// Get a user's profile
+router.get("/:tenantId/profile", async (req, res) => {
   try {
-    const response = await axios.get(`${USERS_SERVICE_URL}/profile`, {
-      headers: {
-        Authorization: req.header("Authorization"),
-      },
-    });
+    const response = await axios.get(
+      `${USERS_SERVICE_URL}/${req.tenantId}/profile`,
+      {
+        headers: {
+          Authorization: req.header("Authorization"),
+        },
+      }
+    );
     res.status(response.status).json(response.data);
   } catch (error) {
     const status = error.response ? error.response.status : 500;
-    const data = error.response ? error.response.data : { message: "Error connecting to User Management Service" };
+    const data = error.response
+      ? error.response.data
+      : { message: "Error connecting to User Management Service" };
     res.status(status).json(data);
   }
 });
 
-// Forward requests for updating user profile
-router.put("/profile", async (req, res) => {
+// Update a user's profile
+router.put("/:tenantId/profile", async (req, res) => {
   try {
-    const response = await axios.put(`${USERS_SERVICE_URL}/profile`, req.body, {
-      headers: {
-        Authorization: req.header("Authorization"),
-      },
-    });
+    const response = await axios.put(
+      `${USERS_SERVICE_URL}/${req.tenantId}/profile`,
+      req.body,
+      {
+        headers: {
+          Authorization: req.header("Authorization"),
+        },
+      }
+    );
     res.status(response.status).json(response.data);
   } catch (error) {
     const status = error.response ? error.response.status : 500;
-    const data = error.response ? error.response.data : { message: "Error connecting to User Management Service" };
+    const data = error.response
+      ? error.response.data
+      : { message: "Error connecting to User Management Service" };
     res.status(status).json(data);
   }
 });
 
-// Forward requests for deleting a user
-router.delete("/:id", async (req, res) => {
+// Delete a user
+router.delete("/:tenantId/:id", async (req, res) => {
   try {
-    const response = await axios.delete(`${USERS_SERVICE_URL}/${req.params.id}`, {
-      headers: {
-        Authorization: req.header("Authorization"),
-      },
-    });
+    const response = await axios.delete(
+      `${USERS_SERVICE_URL}/${req.tenantId}/${req.params.id}`,
+      {
+        headers: {
+          Authorization: req.header("Authorization"),
+        },
+      }
+    );
     res.status(response.status).json(response.data);
   } catch (error) {
     const status = error.response ? error.response.status : 500;
-    const data = error.response ? error.response.data : { message: "Error connecting to User Management Service" };
+    const data = error.response
+      ? error.response.data
+      : { message: "Error connecting to User Management Service" };
     res.status(status).json(data);
   }
 });
 
-// Forward requests for generating API keys for users
-router.post("/generate-api-key/:userId", async (req, res) => {
+// Generate an API key for a user
+router.post("/:tenantId/generate-api-key/:userId", async (req, res) => {
   try {
-    const response = await axios.post(`${USERS_SERVICE_URL}/generate-api-key/${req.params.userId}`, req.body, {
-      headers: {
-        Authorization: req.header("Authorization"),
-      },
-    });
+    const response = await axios.post(
+      `${USERS_SERVICE_URL}/${req.tenantId}/generate-api-key/${req.params.userId}`,
+      req.body,
+      {
+        headers: {
+          Authorization: req.header("Authorization"),
+        },
+      }
+    );
     res.status(response.status).json(response.data);
   } catch (error) {
     const status = error.response ? error.response.status : 500;
-    const data = error.response ? error.response.data : { message: "Error connecting to User Management Service" };
+    const data = error.response
+      ? error.response.data
+      : { message: "Error connecting to User Management Service" };
     res.status(status).json(data);
   }
 });
 
-// Forward requests for changing user password
-router.put("/change-password", async (req, res) => {
+// Change a user's password
+router.put("/:tenantId/change-password", async (req, res) => {
   try {
-    const response = await axios.put(`${USERS_SERVICE_URL}/change-password`, req.body, {
-      headers: {
-        Authorization: req.header("Authorization"),
-      },
-    });
+    const response = await axios.put(
+      `${USERS_SERVICE_URL}/${req.tenantId}/change-password`,
+      req.body,
+      {
+        headers: {
+          Authorization: req.header("Authorization"),
+        },
+      }
+    );
     res.status(response.status).json(response.data);
   } catch (error) {
     const status = error.response ? error.response.status : 500;
-    const data = error.response ? error.response.data : { message: "Error connecting to User Management Service" };
+    const data = error.response
+      ? error.response.data
+      : { message: "Error connecting to User Management Service" };
     res.status(status).json(data);
   }
 });
 
-// Forward requests for password reset
-router.post("/forgot-password", async (req, res) => {
+// Forgot password request
+router.post("/:tenantId/forgot-password", async (req, res) => {
   try {
-    const response = await axios.post(`${USERS_SERVICE_URL}/forgot-password`, req.body);
+    const response = await axios.post(
+      `${USERS_SERVICE_URL}/${req.tenantId}/forgot-password`,
+      req.body
+    );
     res.status(response.status).json(response.data);
   } catch (error) {
     const status = error.response ? error.response.status : 500;
-    const data = error.response ? error.response.data : { message: "Error connecting to User Management Service" };
+    const data = error.response
+      ? error.response.data
+      : { message: "Error connecting to User Management Service" };
     res.status(status).json(data);
   }
 });
 
-// Forward requests for password reset verification
-router.post("/reset-password", async (req, res) => {
+// Reset password
+router.post("/:tenantId/reset-password", async (req, res) => {
   try {
-    const response = await axios.post(`${USERS_SERVICE_URL}/reset-password`, req.body);
+    const response = await axios.post(
+      `${USERS_SERVICE_URL}/${req.tenantId}/reset-password`,
+      req.body
+    );
     res.status(response.status).json(response.data);
   } catch (error) {
     const status = error.response ? error.response.status : 500;
-    const data = error.response ? error.response.data : { message: "Error connecting to User Management Service" };
+    const data = error.response
+      ? error.response.data
+      : { message: "Error connecting to User Management Service" };
     res.status(status).json(data);
   }
 });
 
-// Forward requests for user logout
-router.post("/logout", async (req, res) => {
+// Logout a user
+router.post("/:tenantId/logout", async (req, res) => {
   try {
-    // Log the incoming request details for debugging
     console.log("Logout request received in API Gateway");
     console.log("Authorization Header:", req.header("Authorization"));
 
-    const response = await axios.post(`${USERS_SERVICE_URL}/logout`, req.body, {
-      headers: {
-        Authorization: req.header("Authorization"),
-      },
-    });
+    const response = await axios.post(
+      `${USERS_SERVICE_URL}/${req.tenantId}/logout`,
+      req.body,
+      {
+        headers: {
+          Authorization: req.header("Authorization"),
+        },
+      }
+    );
 
     res.status(response.status).json(response.data);
   } catch (error) {
@@ -186,53 +232,69 @@ router.post("/logout", async (req, res) => {
   }
 });
 
-
-// Forward requests for searching users
-router.get("/search", async (req, res) => {
+// Search for users
+router.get("/:tenantId/search", async (req, res) => {
   try {
-    const response = await axios.get(`${USERS_SERVICE_URL}/search`, {
-      headers: {
-        Authorization: req.header("Authorization"),
-      },
-      params: req.query,
-    });
+    const response = await axios.get(
+      `${USERS_SERVICE_URL}/${req.tenantId}/search`,
+      {
+        headers: {
+          Authorization: req.header("Authorization"),
+        },
+        params: req.query,
+      }
+    );
     res.status(response.status).json(response.data);
   } catch (error) {
     const status = error.response ? error.response.status : 500;
-    const data = error.response ? error.response.data : { message: "Error connecting to User Management Service" };
+    const data = error.response
+      ? error.response.data
+      : { message: "Error connecting to User Management Service" };
     res.status(status).json(data);
   }
 });
 
-// Forward requests for resending verification email
-router.post("/resend-verification-email", async (req, res) => {
+// Resend verification email
+router.post("/:tenantId/resend-verification-email", async (req, res) => {
   try {
-    const response = await axios.post(`${USERS_SERVICE_URL}/resend-verification-email`, req.body, {
-      headers: {
-        Authorization: req.header("Authorization"),
-      },
-    });
+    const response = await axios.post(
+      `${USERS_SERVICE_URL}/${req.tenantId}/resend-verification-email`,
+      req.body,
+      {
+        headers: {
+          Authorization: req.header("Authorization"),
+        },
+      }
+    );
     res.status(response.status).json(response.data);
   } catch (error) {
     const status = error.response ? error.response.status : 500;
-    const data = error.response ? error.response.data : { message: "Error connecting to User Management Service" };
+    const data = error.response
+      ? error.response.data
+      : { message: "Error connecting to User Management Service" };
     res.status(status).json(data);
   }
 });
 
-// Forward requests for uploading profile pictures
-router.post("/upload-profile-picture", async (req, res) => {
+// Upload profile picture
+router.post("/:tenantId/upload-profile-picture", async (req, res) => {
   try {
-    const response = await axios.post(`${USERS_SERVICE_URL}/upload-profile-picture`, req.body, {
-      headers: {
-        Authorization: req.header("Authorization"),
-        "Content-Type": req.header("Content-Type"),
-      },
-    });
+    const response = await axios.post(
+      `${USERS_SERVICE_URL}/${req.tenantId}/upload-profile-picture`,
+      req.body,
+      {
+        headers: {
+          Authorization: req.header("Authorization"),
+          "Content-Type": req.header("Content-Type"),
+        },
+      }
+    );
     res.status(response.status).json(response.data);
   } catch (error) {
     const status = error.response ? error.response.status : 500;
-    const data = error.response ? error.response.data : { message: "Error connecting to User Management Service" };
+    const data = error.response
+      ? error.response.data
+      : { message: "Error connecting to User Management Service" };
     res.status(status).json(data);
   }
 });
