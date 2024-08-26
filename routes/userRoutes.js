@@ -144,50 +144,10 @@ router.post("/:tenantId/reset-password", async (req, res) => {
 router.post("/:tenantId/logout", async (req, res) => {
   try {
     const url = `${USERS_SERVICE_URL}/${req.params.tenantId}/logout`;
-    const response = await axios.post(url, req.body, getHeaders(req.params.tenantId));
-    res.status(response.status).json(response.data);
-  } catch (error) {
-    const status = error.response ? error.response.status : 500;
-    const data = error.response
-      ? error.response.data
-      : { message: "Error connecting to User Management Service" };
-    res.status(status).json(data);
-  }
-});
-
-// Search for users
-router.get("/:tenantId/search", async (req, res) => {
-  try {
-    const response = await axios.get(
-      `${USERS_SERVICE_URL}/${req.tenantId}/search`,
-      {
-        headers: {
-          Authorization: req.header("Authorization"),
-        },
-        params: req.query,
-      }
-    );
-    res.status(response.status).json(response.data);
-  } catch (error) {
-    const status = error.response ? error.response.status : 500;
-    const data = error.response
-      ? error.response.data
-      : { message: "Error connecting to User Management Service" };
-    res.status(status).json(data);
-  }
-});
-
-// Resend verification email
-router.post("/:tenantId/resend-verification-email", async (req, res) => {
-  try {
     const response = await axios.post(
-      `${USERS_SERVICE_URL}/${req.tenantId}/resend-verification-email`,
+      url,
       req.body,
-      {
-        headers: {
-          Authorization: req.header("Authorization"),
-        },
-      }
+      getHeaders(req.params.tenantId)
     );
     res.status(response.status).json(response.data);
   } catch (error) {
@@ -199,28 +159,6 @@ router.post("/:tenantId/resend-verification-email", async (req, res) => {
   }
 });
 
-// Upload profile picture
-router.post("/:tenantId/upload-profile-picture", async (req, res) => {
-  try {
-    const response = await axios.post(
-      `${USERS_SERVICE_URL}/${req.tenantId}/upload-profile-picture`,
-      req.body,
-      {
-        headers: {
-          Authorization: req.header("Authorization"),
-          "Content-Type": req.header("Content-Type"),
-        },
-      }
-    );
-    res.status(response.status).json(response.data);
-  } catch (error) {
-    const status = error.response ? error.response.status : 500;
-    const data = error.response
-      ? error.response.data
-      : { message: "Error connecting to User Management Service" };
-    res.status(status).json(data);
-  }
-});
 // Search for users
 router.get("/:tenantId/search", async (req, res) => {
   try {
@@ -273,6 +211,5 @@ router.post("/:tenantId/upload-profile-picture", async (req, res) => {
     res.status(status).json(data);
   }
 });
-
 
 module.exports = router;
