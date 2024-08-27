@@ -4,12 +4,12 @@ const morgan = require("morgan");
 const dotenv = require("dotenv");
 const rateLimiter = require("./middleware/rateLimiterMiddleware");
 const apiKeyMiddleware = require("./middleware/apiKeyMiddleware");
-
+const cors = require("cors")
 dotenv.config();
 
 const app = express();
 app.set("trust proxy", 1);
-
+app.use(cors())
 // Middleware
 app.use(morgan("dev"));
 app.use(express.json());
