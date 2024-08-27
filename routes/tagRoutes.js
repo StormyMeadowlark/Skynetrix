@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const axios = require("axios");
-const authMiddleware = require("../middleware/authMiddleware"); // Import the auth middleware
 const tenantMiddleware = require("../middleware/tenantMiddleware"); // Import the tenant middleware
 
 const TAG_SERVICE_URL =
@@ -27,7 +26,7 @@ router.get("/:tenantId/", async (req, res) => {
 });
 
 // Create a new tag (secured route)
-router.post("/:tenantId/", authMiddleware, async (req, res) => {
+router.post("/:tenantId/", async (req, res) => {
   try {
     const response = await axios.post(
       `${TAG_SERVICE_URL}/${req.tenantId}/`,
@@ -49,7 +48,7 @@ router.post("/:tenantId/", authMiddleware, async (req, res) => {
 });
 
 // Update an existing tag (secured route)
-router.put("/:tenantId/:id", authMiddleware, async (req, res) => {
+router.put("/:tenantId/:id", async (req, res) => {
   try {
     const response = await axios.put(
       `${TAG_SERVICE_URL}/${req.tenantId}/${req.params.id}`,
@@ -71,7 +70,7 @@ router.put("/:tenantId/:id", authMiddleware, async (req, res) => {
 });
 
 // Delete a tag (secured route)
-router.delete("/:tenantId/:id", authMiddleware, async (req, res) => {
+router.delete("/:tenantId/:id", async (req, res) => {
   try {
     const response = await axios.delete(
       `${TAG_SERVICE_URL}/${req.tenantId}/${req.params.id}`,

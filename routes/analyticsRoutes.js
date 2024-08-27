@@ -14,7 +14,6 @@ router.use("/:tenantId/*", tenantMiddleware);
 // Forward request to record a view for a specific post (secured route)
 router.post(
   "/:tenantId/record/:postId",
-  authMiddleware,
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -43,7 +42,6 @@ router.post(
 // Forward request to get analytics data for a specific post (secured route)
 router.get(
   "/:tenantId/post/:postId",
-  authMiddleware,
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -71,7 +69,6 @@ router.get(
 // Forward request to get all analytics data (admin-only, secured route)
 router.get(
   "/:tenantId/",
-  authMiddleware,
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -102,7 +99,6 @@ router.get(
 // Forward request to get summary analytics for a tenant (secured route)
 router.get(
   "/:tenantId/summary",
-  authMiddleware,
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -133,7 +129,6 @@ router.get(
 // Forward request to get analytics data over time for a specific post (secured route)
 router.get(
   "/:tenantId/post/:postId/time-range",
-  authMiddleware,
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -166,7 +161,6 @@ router.get(
 // Forward request to get analytics data for all posts for a tenant (secured route)
 router.get(
   "/:tenantId/posts",
-  authMiddleware,
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -197,7 +191,6 @@ router.get(
 // Forward request to get analytics data by category for a tenant (secured route)
 router.get(
   "/:tenantId/category/:categoryId",
-  authMiddleware,
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -228,7 +221,6 @@ router.get(
 // Forward request to delete analytics data for a specific post (admin-only, secured route)
 router.delete(
   "/:tenantId/post/:postId",
-  authMiddleware,
   apiKeyMiddleware,
   async (req, res) => {
     try {

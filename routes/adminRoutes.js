@@ -16,7 +16,6 @@ router.use("/:tenantId/*", tenantMiddleware);
 // Route to get admin dashboard data (Admin-Only)
 router.get(
   "/:tenantId/dashboard",
-  authMiddleware,
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -41,7 +40,6 @@ router.get(
 // Route to manage users (Admin-Only)
 router.post(
   "/:tenantId/users",
-  authMiddleware,
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -66,7 +64,6 @@ router.post(
 // Route to update user details (Admin-Only)
 router.put(
   "/:tenantId/users/:userId",
-  authMiddleware,
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -91,7 +88,6 @@ router.put(
 // Route to delete a user (Admin-Only)
 router.delete(
   "/:tenantId/users/:userId",
-  authMiddleware,
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -116,7 +112,6 @@ router.delete(
 // Route to manage settings (Admin-Only)
 router.post(
   "/:tenantId/settings",
-  authMiddleware,
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -141,7 +136,6 @@ router.post(
 // Route to update settings (Admin-Only)
 router.put(
   "/:tenantId/settings/:settingId",
-  authMiddleware,
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -166,7 +160,6 @@ router.put(
 // Route to delete a setting (Admin-Only)
 router.delete(
   "/:tenantId/settings/:settingId",
-  authMiddleware,
   apiKeyMiddleware,
   async (req, res) => {
     try {

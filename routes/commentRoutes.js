@@ -14,7 +14,7 @@ router.use("/:tenantId/*", tenantMiddleware);
 // Forward request to create a new comment (secured route)
 router.post(
   "/:tenantId/:postId",
-  authMiddleware,
+
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -40,7 +40,7 @@ router.post(
 // Forward request to get all comments for a post (secured route)
 router.get(
   "/:tenantId/:postId",
-  authMiddleware,
+
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -66,7 +66,7 @@ router.get(
 // Forward request to delete a comment (secured route)
 router.delete(
   "/:tenantId/:id",
-  authMiddleware,
+
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -92,7 +92,7 @@ router.delete(
 // Forward request to update a comment (secured route)
 router.put(
   "/:tenantId/:id",
-  authMiddleware,
+
   apiKeyMiddleware,
   async (req, res) => {
     try {

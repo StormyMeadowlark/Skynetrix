@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const axios = require("axios");
-const tenantMiddleware = require("../middleware/tenantMiddleware")
+const tenantMiddleware = require("../middleware/tenantMiddleware");
+const authMiddleware = require("../middleware/authMiddleware");
 
 const USERS_SERVICE_URL =
   process.env.USERS_SERVICE_URL || "http://localhost:5000/api/users";
@@ -9,97 +10,69 @@ const USERS_SERVICE_URL =
 // Apply the tenant middleware to all routes that include :tenantId
 router.use(tenantMiddleware);
 
-// Login a user
-router.post("/:tenantId/login", async (req, res) => {
-  try {
-    const tenantId = req.params.tenantId;
-    const url = `${USERS_SERVICE_URL}/${tenantId}/login`;
+// Function to get headers for each request
+const getHeaders = (tenantId, token = null, contentType = null) => {
+  const headers = {
+    "X-Tenant-Id": tenantId,
+  };
 
-    const response = await axios.post(url, req.body, getHeaders(tenantId));
-
-    res.status(response.status).json(response.data);
-  } catch (error) {
-    console.error(`Error forwarding login request for tenant ${tenantId}:`, error.message);
-
-    const status = error.response ? error.response.status : 500;
-    const data = error.response
-      ? error.response.data
-      : { message: "Error connecting to User Management Service" };
-
-    res.status(status).json(data);
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
   }
-});
 
-// Register a new user
+  if (contentType) {
+    headers["Content-Type"] = contentType;
+  }
+
+  return headers;
+};
+
+// Public routes (No auth required)
 router.post("/:tenantId/register", async (req, res) => {
   try {
-    const tenantId = req.params.tenantId;
-    const url = `${USERS_SERVICE_URL}/${tenantId}/register`;
-    
-    const response = await axios.post(url, req.body);
-    
-    res.status(response.status).json({
-      message: "User registered and email sent successfully.",
-      data: response.data,
-    });
-  } catch (error) {
-    console.error(`Error forwarding registration request for tenant ${tenantId}:`, error.message);
-    
-    const status = error.response ? error.response.status : 500;
-    const data = error.response
-      ? error.response.data
-      : { message: "Error connecting to User Management Service" };
-    
-    res.status(status).json(data);
-  }
-});
-
-// Verify a user's email
-router.get("/:tenantId/verify-email/:token", async (req, res) => {
-  try {
-    const tenantId = req.params.tenantId;
-    const token = req.params.token;
-    const url = `${USERS_SERVICE_URL}/${tenantId}/verify-email/${token}`;
-
-    const response = await axios.get(url, getHeaders(tenantId));
-
+    const url = `${USERS_SERVICE_URL}/${req.params.tenantId}/register`;
+    const headers = getHeaders(
+      req.params.tenantId,
+      null,
+      req.header("Content-Type")
+    );
+    const response = await axios.post(url, req.body, { headers });
     res.status(response.status).json(response.data);
   } catch (error) {
-    console.error(`Error forwarding email verification request for tenant ${tenantId}:`, error.message);
-
     const status = error.response ? error.response.status : 500;
     const data = error.response
       ? error.response.data
       : { message: "Error connecting to User Management Service" };
-    
     res.status(status).json(data);
   }
 });
 
-// Get a user's profile
-router.get("/:tenantId/profile", async (req, res) => {
+router.post("/:tenantId/login", async (req, res) => {
   try {
-    const tenantId = req.params.tenantId;
-    const token = req.header("Authorization")?.replace("Bearer ", ""); // Extract token and remove 'Bearer ' prefix
-    const url = `${USERS_SERVICE_URL}/${tenantId}/profile`;
+    const url = `${USERS_SERVICE_URL}/${req.params.tenantId}/login`;
+    const headers = getHeaders(
+      req.params.tenantId,
+      null,
+      req.header("Content-Type")
+    );
+    const response = await axios.post(url, req.body, { headers });
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    const status = error.response ? error.response.status : 500;
+    const data = error.response
+      ? error.response.data
+      : { message: "Error connecting to User Management Service" };
+    res.status(status).json(data);
+  }
+});
 
-    // Validate the presence of the token
-    if (!token) {
-      return res
-        .status(401)
-        .json({ message: "Authorization token is required" });
-    }
-
-    // Set up headers for the request to User Management Service
-    const headers = {
-      "X-Tenant-Id": tenantId,
-      Authorization: `Bearer ${token}`, // Pass token in the Authorization header
-    };
-
+router.get("/:tenantId/verify-email/:token", async (req, res) => {
+  try {
+    const url = `${USERS_SERVICE_URL}/${req.params.tenantId}/verify-email/${req.params.token}`;
+    const headers = getHeaders(req.params.tenantId);
     const response = await axios.get(url, { headers });
     res.status(response.status).json(response.data);
   } catch (error) {
-    console.error("Error forwarding get user profile request:", error.message);
     const status = error.response ? error.response.status : 500;
     const data = error.response
       ? error.response.data
@@ -107,75 +80,73 @@ router.get("/:tenantId/profile", async (req, res) => {
     res.status(status).json(data);
   }
 });
+
+// Protected routes (Require auth)
+router.get(
+  "/:tenantId/profile",
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const tenantId = req.params.tenantId;
+      const userId = req.user.userId; // This should be set by the authMiddleware
+
+      const user = await User.findOne({ _id: userId, tenant: tenantId });
+
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      res.status(200).json({ user });
+    } catch (error) {
+      res.status(500).json({ error: "Server error", details: error.message });
+    }
+  }
+);
 
 
 
 // Update a user's profile
-router.put("/:tenantId/profile", async (req, res) => {
-  try {
-    const tenantId = req.params.tenantId;
-    const token = req.header("Authorization")?.replace("Bearer ", ""); // Extract token and remove 'Bearer ' prefix
-    const url = `${USERS_SERVICE_URL}/${tenantId}/profile`;
+router.get(
+  "/:tenantId/profile",
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const tenantId = req.params.tenantId;
+      const userId = req.user.userId; // This should be set by the authMiddleware
 
-    // Validate the presence of the token
-    if (!token) {
-      return res
-        .status(401)
-        .json({ message: "Authorization token is required" });
+      // Fetch the user by ID and tenant
+      const user = await User.findOne({ _id: userId, tenant: tenantId });
+
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      res.status(200).json({ user });
+    } catch (error) {
+      console.error("Error fetching user profile:", error.message);
+      res.status(500).json({ error: "Server error", details: error.message });
     }
-
-    // Set up headers for the request to User Management Service
-    const headers = {
-      "X-Tenant-Id": tenantId,
-      Authorization: `Bearer ${token}`, // Pass token in the Authorization header
-    };
-
-    // Make the PUT request
-    const response = await axios.put(url, req.body, { headers });
-    res.status(response.status).json(response.data);
-  } catch (error) {
-    console.error(
-      "Error forwarding update user profile request:",
-      error.message
-    );
-    const status = error.response ? error.response.status : 500;
-    const data = error.response
-      ? error.response.data
-      : { message: "Error connecting to User Management Service" };
-    res.status(status).json(data);
   }
-});
-
+);
 
 // Change user password
 router.post("/:tenantId/change-password", async (req, res) => {
   try {
     const tenantId = req.params.tenantId;
-    const token = req.header("Authorization")?.replace("Bearer ", ""); // Extract and clean the token
+    const token = req.header("Authorization")?.replace("Bearer ", "");
     const url = `${USERS_SERVICE_URL}/${tenantId}/change-password`;
 
-    // Ensure token is present
     if (!token) {
       return res
         .status(401)
         .json({ message: "Authorization token is required" });
     }
 
-    // Set up headers for the request to User Management Service
-    const headers = {
-      "X-Tenant-Id": tenantId,
-      Authorization: `Bearer ${token}`, // Include token in the Authorization header
-    };
-
-    // Make the POST request
+    const headers = getHeaders(tenantId, token, req.header("Content-Type"));
     const response = await axios.post(url, req.body, { headers });
     res.status(response.status).json(response.data);
   } catch (error) {
     console.error("Error forwarding change password request:", error.message);
-    console.error(
-      "Error details:",
-      error.response ? error.response.data : "No response data"
-    );
     const status = error.response ? error.response.status : 500;
     const data = error.response
       ? error.response.data
@@ -184,12 +155,16 @@ router.post("/:tenantId/change-password", async (req, res) => {
   }
 });
 
-
 // Password reset
 router.post("/:tenantId/forgot-password", async (req, res) => {
   try {
     const url = `${USERS_SERVICE_URL}/${req.params.tenantId}/forgot-password`;
-    const response = await axios.post(url, req.body, getHeaders(req.params.tenantId));
+    const headers = getHeaders(
+      req.params.tenantId,
+      null,
+      req.header("Content-Type")
+    );
+    const response = await axios.post(url, req.body, { headers });
     res.status(response.status).json(response.data);
   } catch (error) {
     const status = error.response ? error.response.status : 500;
@@ -204,7 +179,12 @@ router.post("/:tenantId/forgot-password", async (req, res) => {
 router.post("/:tenantId/reset-password", async (req, res) => {
   try {
     const url = `${USERS_SERVICE_URL}/${req.params.tenantId}/reset-password`;
-    const response = await axios.post(url, req.body, getHeaders(req.params.tenantId));
+    const headers = getHeaders(
+      req.params.tenantId,
+      null,
+      req.header("Content-Type")
+    );
+    const response = await axios.post(url, req.body, { headers });
     res.status(response.status).json(response.data);
   } catch (error) {
     const status = error.response ? error.response.status : 500;
@@ -217,25 +197,22 @@ router.post("/:tenantId/reset-password", async (req, res) => {
 
 // Logout user
 router.post("/:tenantId/logout", async (req, res) => {
-  const tenantId = req.params.tenantId;
-  const token = req.header("Authorization")
-    ? req.header("Authorization").replace("Bearer ", "")
-    : undefined;
-  const url = `${USERS_SERVICE_URL}/${tenantId}/logout`;
-
   try {
-    const response = await axios.post(
-      url,
-      req.body,
-      getHeaders(tenantId, token) // Pass headers including Authorization token
-    );
+    const tenantId = req.params.tenantId;
+    const token = req.header("Authorization")?.replace("Bearer ", "");
+    const url = `${USERS_SERVICE_URL}/${tenantId}/logout`;
+
+    if (!token) {
+      return res
+        .status(401)
+        .json({ message: "Authorization token is required" });
+    }
+
+    const headers = getHeaders(tenantId, token);
+    const response = await axios.post(url, req.body, { headers });
     res.status(response.status).json(response.data);
   } catch (error) {
     console.error("Error forwarding logout request:", error.message);
-    console.error(
-      "Error details:",
-      error.response ? error.response.data : "No response data"
-    );
     const status = error.response ? error.response.status : 500;
     const data = error.response
       ? error.response.data
@@ -248,8 +225,9 @@ router.post("/:tenantId/logout", async (req, res) => {
 router.get("/:tenantId/search", async (req, res) => {
   try {
     const url = `${USERS_SERVICE_URL}/${req.params.tenantId}/search`;
+    const headers = getHeaders(req.params.tenantId);
     const response = await axios.get(url, {
-      headers: getHeaders(req.params.tenantId).headers,
+      headers,
       params: req.query,
     });
     res.status(response.status).json(response.data);
@@ -266,7 +244,12 @@ router.get("/:tenantId/search", async (req, res) => {
 router.post("/:tenantId/resend-verification-email", async (req, res) => {
   try {
     const url = `${USERS_SERVICE_URL}/${req.params.tenantId}/resend-verification-email`;
-    const response = await axios.post(url, req.body, getHeaders(req.params.tenantId));
+    const headers = getHeaders(
+      req.params.tenantId,
+      null,
+      req.header("Content-Type")
+    );
+    const response = await axios.post(url, req.body, { headers });
     res.status(response.status).json(response.data);
   } catch (error) {
     const status = error.response ? error.response.status : 500;
@@ -276,35 +259,26 @@ router.post("/:tenantId/resend-verification-email", async (req, res) => {
     res.status(status).json(data);
   }
 });
+
+// Delete user
 router.delete("/:tenantId/user/:userId", async (req, res) => {
   try {
     const tenantId = req.params.tenantId;
     const userId = req.params.userId;
-    const token = req.header("Authorization")?.replace("Bearer ", ""); // Extract and clean the token
+    const token = req.header("Authorization")?.replace("Bearer ", "");
     const url = `${USERS_SERVICE_URL}/${tenantId}/user/${userId}`;
 
-    // Ensure token is present
     if (!token) {
       return res
         .status(401)
         .json({ message: "Authorization token is required" });
     }
 
-    // Set up headers for the request to User Management Service
-    const headers = {
-      "X-Tenant-Id": tenantId,
-      Authorization: `Bearer ${token}`, // Include token in the Authorization header
-    };
-
-    // Make the DELETE request
+    const headers = getHeaders(tenantId, token);
     const response = await axios.delete(url, { headers });
     res.status(response.status).json(response.data);
   } catch (error) {
     console.error("Error forwarding delete user request:", error.message);
-    console.error(
-      "Error details:",
-      error.response ? error.response.data : "No response data"
-    );
     const status = error.response ? error.response.status : 500;
     const data = error.response
       ? error.response.data
@@ -312,16 +286,15 @@ router.delete("/:tenantId/user/:userId", async (req, res) => {
     res.status(status).json(data);
   }
 });
+
 // Upload profile picture
 router.post("/:tenantId/upload-profile-picture", async (req, res) => {
   try {
     const url = `${USERS_SERVICE_URL}/${req.params.tenantId}/upload-profile-picture`;
-    const response = await axios.post(url, req.body, {
-      headers: {
-        ...getHeaders(req.params.tenantId).headers,
-        "Content-Type": req.header("Content-Type"),
-      },
-    });
+    const headers = {
+      ...getHeaders(req.params.tenantId, null, req.header("Content-Type")),
+    };
+    const response = await axios.post(url, req.body, { headers });
     res.status(response.status).json(response.data);
   } catch (error) {
     const status = error.response ? error.response.status : 500;

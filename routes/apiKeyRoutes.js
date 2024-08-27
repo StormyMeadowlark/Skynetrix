@@ -11,7 +11,7 @@ const API_KEY_SERVICE_URL =
 router.use("/:tenantId/*", tenantMiddleware);
 
 // Route to generate an API key for a specific tenant (secured route)
-router.post("/:tenantId/generate-api-key", authMiddleware, async (req, res) => {
+router.post("/:tenantId/generate-api-key", async (req, res) => {
   try {
     const response = await axios.post(
       `${API_KEY_SERVICE_URL}/${req.tenantId}/generate-api-key`,
@@ -35,7 +35,7 @@ router.post("/:tenantId/generate-api-key", authMiddleware, async (req, res) => {
 // Route to revoke an API key for a specific tenant (secured route)
 router.delete(
   "/:tenantId/revoke-api-key/:key",
-  authMiddleware,
+ 
   async (req, res) => {
     try {
       const response = await axios.delete(

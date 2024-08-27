@@ -20,7 +20,7 @@ const SEND_NEWSLETTER_SERVICE_URL =
 router.use("/:tenantId/*", tenantMiddleware);
 
 // Forward request to create a new newsletter (secured route)
-router.post("/:tenantId/newsletters", authMiddleware, async (req, res) => {
+router.post("/:tenantId/newsletters", async (req, res) => {
   try {
     const response = await axios.post(
       `${NEWSLETTER_SERVICE_URL}/${req.tenantId}/`,
@@ -45,7 +45,7 @@ router.post("/:tenantId/newsletters", authMiddleware, async (req, res) => {
 // Forward request to update a newsletter (secured route)
 router.put(
   "/:tenantId/newsletters/:id",
-  authMiddleware,
+
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -77,7 +77,7 @@ router.put(
 // Forward request to delete a newsletter (secured route)
 router.delete(
   "/:tenantId/newsletters/:id",
-  authMiddleware,
+
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -108,7 +108,7 @@ router.delete(
 // Forward request to get a newsletter by ID (secured route)
 router.get(
   "/:tenantId/newsletters/:id",
-  authMiddleware,
+
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -139,7 +139,7 @@ router.get(
 // Forward request to get all newsletters (secured route)
 router.get(
   "/:tenantId/newsletters",
-  authMiddleware,
+
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -170,7 +170,7 @@ router.get(
 // Forward request to search newsletters (secured route)
 router.get(
   "/:tenantId/newsletters/search",
-  authMiddleware,
+
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -202,7 +202,7 @@ router.get(
 // Forward request to send a newsletter (secured route)
 router.post(
   "/:tenantId/newsletters/:id/send",
-  authMiddleware,
+
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -232,7 +232,7 @@ router.post(
 // Forward request to schedule a newsletter (secured route)
 router.post(
   "/:tenantId/newsletters/:id/schedule",
-  authMiddleware,
+
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -264,7 +264,7 @@ router.post(
 // Forward request to subscribe a user (secured route)
 router.post(
   "/:tenantId/subscribers",
-  authMiddleware,
+
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -293,7 +293,7 @@ router.post(
 // Forward request to unsubscribe a user (secured route)
 router.delete(
   "/:tenantId/subscribers/:id",
-  authMiddleware,
+
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -321,7 +321,7 @@ router.delete(
 // Forward request to get all subscribers (secured route)
 router.get(
   "/:tenantId/subscribers",
-  authMiddleware,
+
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -352,7 +352,7 @@ router.get(
 // Forward request to get a subscriber by ID (secured route)
 router.get(
   "/:tenantId/subscribers/:id",
-  authMiddleware,
+
   apiKeyMiddleware,
   async (req, res) => {
     try {

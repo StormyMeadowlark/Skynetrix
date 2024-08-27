@@ -4,7 +4,6 @@ const morgan = require("morgan");
 const dotenv = require("dotenv");
 const rateLimiter = require("./middleware/rateLimiterMiddleware");
 const apiKeyMiddleware = require("./middleware/apiKeyMiddleware");
-// Remove tenantMiddleware since it's now applied in specific routes
 
 dotenv.config();
 
@@ -17,8 +16,8 @@ app.use(express.json());
 app.use(rateLimiter); // Apply the rate limiter to all requests
 
 // Routes
-const adminRoutes = require("./routes/adminRoutes");
 const userRoutes = require("./routes/userRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 const apiKeyRoutes = require("./routes/apiKeyRoutes");
 const mediaRoutes = require("./routes/mediaRoutes");
 const tenantRoutes = require("./routes/tenantRoutes");
@@ -32,10 +31,10 @@ const socialMediaRoutes = require("./routes/socialMediaRoutes");
 const tagRoutes = require("./routes/tagRoutes");
 
 // Integrate the user management routes
+app.use("/api/v1/users", userRoutes);
 app.use("/api/v1", tenantRoutes); // Protected route
 app.use("/api/v1/keys", apiKeyRoutes); // Protected route
 app.use("/api/v1/admin", adminRoutes); // Protected route
-app.use("/api/v1/users", userRoutes); // Protect user-related routes
 app.use("/api/v1/media", mediaRoutes); // Protected route
 
 // CMS-related routes
@@ -67,31 +66,26 @@ mongoose
 app.use((err, req, res, next) => {
   console.error(err.stack);
 
-  // Handle specific error types
   if (err.name === "ValidationError") {
-    return res
-      .status(err.statusCode)
-      .json({ message: err.message, errors: err.errors });
+    return res.status(400).json({ message: err.message, errors: err.errors });
   }
 
   if (err.name === "UnauthorizedError") {
-    return res.status(err.statusCode).json({ message: err.message });
+    return res.status(401).json({ message: err.message });
   }
 
   if (err.name === "NotFoundError") {
-    return res.status(err.statusCode).json({ message: err.message });
+    return res.status(404).json({ message: err.message });
   }
 
-  // Default to 500 if no specific error handler is matched
-  res.status(err.statusCode || 500).json({
+  res.status(500).json({
     message: err.message || "Internal Server Error",
   });
 });
 
-module.exports = app; // Export the app for testing and other uses
+module.exports = app;
 
 if (require.main === module) {
-  // Start the server only if this script is run directly (not when imported for testing)
   const PORT = process.env.PORT || 2015;
   app.listen(PORT, () => {
     console.log(`API Gateway is running on port ${PORT}`);

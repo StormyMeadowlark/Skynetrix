@@ -8,7 +8,7 @@ const TENANT_SERVICE_URL =
   process.env.TENANT_SERVICE_URL || "http://localhost:5000/api/tenants";
 
 // Apply the auth middleware globally to all routes that require authentication
-router.use(authMiddleware);
+
 
 // Routes for Tenant Management Service
 

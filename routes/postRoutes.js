@@ -1,49 +1,63 @@
 const express = require("express");
 const router = express.Router();
 const axios = require("axios");
-const authMiddleware = require("../middleware/authMiddleware"); // Import the auth middleware
-const tenantMiddleware = require("../middleware/tenantMiddleware"); // Import the tenant middleware
+const authMiddleware = require("../middleware/authMiddleware");
+const tenantMiddleware = require("../middleware/tenantMiddleware");
 
 const POST_SERVICE_URL =
-  process.env.POST_SERVICE_URL || "http://localhost:5000/api/posts";
+  process.env.POST_SERVICE_URL || "http://localhost:5001/api/posts";
 
 // Apply tenantMiddleware globally to ensure all routes are tenant-specific
-router.use("/:tenantId/*", tenantMiddleware);
+router.use("/:tenantId/", tenantMiddleware);
 
-// Routes for Post Management Service
-
-// Create a new post (secured route)
-router.post("/:tenantId/", authMiddleware, async (req, res) => {
+// Create a new post
+router.post("/:tenantId", authMiddleware, async (req, res) => {
   try {
-    console.log("Token being sent:", req.header("Authorization"));
-
-    const requestBody = req.body;
+    console.log(
+      `[API Gateway] Forwarding create post request for tenantId: ${req.params.tenantId}`
+    );
+    console.log(
+      `[API Gateway] Forwarding Authorization: ${req.header("Authorization")}`
+    );
 
     const response = await axios.post(
-      `${POST_SERVICE_URL}/${req.tenantId}/`,
-      requestBody,
+      `${POST_SERVICE_URL}/${req.params.tenantId}`,
+      req.body,
       {
         headers: {
-          Authorization: req.header("Authorization"), // Forwarding the token
+          Authorization: req.header("Authorization"),
+          "x-tenant-id": req.params.tenantId,
         },
       }
     );
-
     res.status(response.status).json(response.data);
   } catch (error) {
-    console.error("Error forwarding create post request:", error.message);
-    const status = error.response ? error.response.status : 500;
-    const data = error.response
-      ? error.response.data
-      : { message: "Error connecting to Post Service" };
-    res.status(status).json(data);
+    console.error(
+      "[API Gateway] Error forwarding create post request:",
+      error.message
+    );
+    res
+      .status(error.response ? error.response.status : 500)
+      .json(
+        error.response
+          ? error.response.data
+          : { message: "Error connecting to Post Service" }
+      );
   }
 });
 
+
 // Get all posts (published) for a specific tenant
-router.get("/:tenantId/", async (req, res) => {
+router.get("/:tenantId", async (req, res) => {
   try {
-    const response = await axios.get(`${POST_SERVICE_URL}/${req.tenantId}/`);
+    const response = await axios.get(
+      `${POST_SERVICE_URL}/${req.params.tenantId}`,
+      {
+        headers: {
+          "X-Tenant-Id": req.params.tenantId,
+        },
+      }
+    );
     res.status(response.status).json(response.data);
   } catch (error) {
     console.error("Error forwarding get all posts request:", error.message);
@@ -56,27 +70,34 @@ router.get("/:tenantId/", async (req, res) => {
 });
 
 // Get a specific post by ID for a specific tenant
-router.get("/:tenantId/:id", async (req, res) => {
+router.get("/:tenantId/:postId", async (req, res) => {
   try {
     const response = await axios.get(
-      `${POST_SERVICE_URL}/${req.tenantId}/${req.params.id}`
+      `${POST_SERVICE_URL}/${req.params.tenantId}/${req.params.postId}`,
+      {
+        headers: {
+          Authorization: req.header("Authorization"),
+          "X-Tenant-Id": req.params.tenantId,
+        },
+      }
     );
     res.status(response.status).json(response.data);
   } catch (error) {
     console.error("Error forwarding get post by ID request:", error.message);
-    const status = error.response ? error.response.status : 500;
-    const data = error.response
-      ? error.response.data
-      : { message: "Error connecting to Post Service" };
-    res.status(status).json(data);
+    res
+      .status(error.response ? error.response.status : 500)
+      .json(
+        error.response
+          ? error.response.data
+          : { message: "Error connecting to Post Service" }
+      );
   }
 });
-
-// Update a post (secured route)
+// Update a post
 router.put("/:tenantId/:id", authMiddleware, async (req, res) => {
   try {
     const response = await axios.put(
-      `${POST_SERVICE_URL}/${req.tenantId}/${req.params.id}`,
+      `${POST_SERVICE_URL}/${req.params.tenantId}/${req.params.id}`,
       req.body,
       {
         headers: {
@@ -95,11 +116,11 @@ router.put("/:tenantId/:id", authMiddleware, async (req, res) => {
   }
 });
 
-// Delete a post (secured route)
+// Delete a post
 router.delete("/:tenantId/:id", authMiddleware, async (req, res) => {
   try {
     const response = await axios.delete(
-      `${POST_SERVICE_URL}/${req.tenantId}/${req.params.id}`,
+      `${POST_SERVICE_URL}/${req.params.tenantId}/${req.params.id}`,
       {
         headers: {
           Authorization: req.header("Authorization"),
@@ -117,11 +138,11 @@ router.delete("/:tenantId/:id", authMiddleware, async (req, res) => {
   }
 });
 
-// Publish a post (secured route)
+// Publish a post
 router.post("/:tenantId/:id/publish", authMiddleware, async (req, res) => {
   try {
     const response = await axios.post(
-      `${POST_SERVICE_URL}/${req.tenantId}/${req.params.id}/publish`,
+      `${POST_SERVICE_URL}/${req.params.tenantId}/${req.params.id}/publish`,
       req.body,
       {
         headers: {
@@ -140,11 +161,11 @@ router.post("/:tenantId/:id/publish", authMiddleware, async (req, res) => {
   }
 });
 
-// Unpublish a post (secured route)
+// Unpublish a post
 router.post("/:tenantId/:id/unpublish", authMiddleware, async (req, res) => {
   try {
     const response = await axios.post(
-      `${POST_SERVICE_URL}/${req.tenantId}/${req.params.id}/unpublish`,
+      `${POST_SERVICE_URL}/${req.params.tenantId}/${req.params.id}/unpublish`,
       req.body,
       {
         headers: {
@@ -155,52 +176,6 @@ router.post("/:tenantId/:id/unpublish", authMiddleware, async (req, res) => {
     res.status(response.status).json(response.data);
   } catch (error) {
     console.error("Error forwarding unpublish post request:", error.message);
-    const status = error.response ? error.response.status : 500;
-    const data = error.response
-      ? error.response.data
-      : { message: "Error connecting to Post Service" };
-    res.status(status).json(data);
-  }
-});
-
-// Like a post (secured route)
-router.post("/:tenantId/:postId/like", authMiddleware, async (req, res) => {
-  try {
-    const response = await axios.post(
-      `${POST_SERVICE_URL}/${req.tenantId}/${req.params.postId}/like`,
-      req.body,
-      {
-        headers: {
-          Authorization: req.header("Authorization"),
-        },
-      }
-    );
-    res.status(response.status).json(response.data);
-  } catch (error) {
-    console.error("Error forwarding like post request:", error.message);
-    const status = error.response ? error.response.status : 500;
-    const data = error.response
-      ? error.response.data
-      : { message: "Error connecting to Post Service" };
-    res.status(status).json(data);
-  }
-});
-
-// Dislike a post (secured route)
-router.post("/:tenantId/:postId/dislike", authMiddleware, async (req, res) => {
-  try {
-    const response = await axios.post(
-      `${POST_SERVICE_URL}/${req.tenantId}/${req.params.postId}/dislike`,
-      req.body,
-      {
-        headers: {
-          Authorization: req.header("Authorization"),
-        },
-      }
-    );
-    res.status(response.status).json(response.data);
-  } catch (error) {
-    console.error("Error forwarding dislike post request:", error.message);
     const status = error.response ? error.response.status : 500;
     const data = error.response
       ? error.response.data

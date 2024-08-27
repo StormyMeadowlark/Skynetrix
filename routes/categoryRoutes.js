@@ -14,7 +14,7 @@ router.use("/:tenantId/*", tenantMiddleware);
 // Forward request to get all categories (secured route)
 router.get(
   "/:tenantId/",
-  authMiddleware,
+
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -45,7 +45,7 @@ router.get(
 // Forward request to create a new category (secured route)
 router.post(
   "/:tenantId/",
-  authMiddleware,
+
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -74,7 +74,7 @@ router.post(
 // Forward request to update a category (secured route)
 router.put(
   "/:tenantId/:id",
-  authMiddleware,
+
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -103,7 +103,7 @@ router.put(
 // Forward request to delete a category (secured route)
 router.delete(
   "/:tenantId/:id",
-  authMiddleware,
+
   apiKeyMiddleware,
   async (req, res) => {
     try {

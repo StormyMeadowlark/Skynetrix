@@ -16,7 +16,6 @@ router.use("/:tenantId/*", tenantMiddleware);
 // Route to upload media (secured route)
 router.post(
   "/:tenantId/upload",
-  authMiddleware,
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -42,7 +41,6 @@ router.post(
 // Route to get all media (secured route)
 router.get(
   "/:tenantId/",
-  authMiddleware,
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -67,7 +65,6 @@ router.get(
 // Route to get media by ID (secured route)
 router.get(
   "/:tenantId/:id",
-  authMiddleware,
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -92,7 +89,6 @@ router.get(
 // Route to delete media by ID (secured route)
 router.delete(
   "/:tenantId/:id",
-  authMiddleware,
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -117,7 +113,6 @@ router.delete(
 // Forward request to upload media (secured route)
 router.post(
   "/:tenantId/upload",
-  authMiddleware,
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -146,7 +141,6 @@ router.post(
 // Forward request to get all media (secured route)
 router.get(
   "/:tenantId/",
-  authMiddleware,
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -173,7 +167,6 @@ router.get(
 // Forward request to get media by ID (secured route)
 router.get(
   "/:tenantId/:id",
-  authMiddleware,
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -200,7 +193,6 @@ router.get(
 // Forward request to delete media (secured route)
 router.delete(
   "/:tenantId/:id",
-  authMiddleware,
   apiKeyMiddleware,
   async (req, res) => {
     try {

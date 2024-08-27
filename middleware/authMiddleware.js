@@ -1,27 +1,23 @@
 const jwt = require("jsonwebtoken");
 
 const authMiddleware = (req, res, next) => {
-  const authHeader = req.header("Authorization");
+  const token = req.header("Authorization");
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res
-      .status(401)
-      .json({ error: "Authorization header missing or malformed." });
+  if (!token || !token.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "No token provided." });
   }
 
-  const token = authHeader.split(" ")[1];
+  const actualToken = token.split(" ")[1];
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+  jwt.verify(actualToken, process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
-      if (err.name === "TokenExpiredError") {
-        console.log("Token expired:", err);
-        return res.status(401).json({ error: "Token expired." });
-      }
-      console.log("JWT verification error:", err);
+      console.log("[AUTH] JWT verification error:", err);
       return res.status(401).json({ error: "Invalid token." });
     }
 
-    req.user = decoded; // Attach the decoded token payload to req.user
+    console.log("[AUTH] JWT verified successfully. Decoded payload:", decoded);
+    req.user = { _id: decoded.userId };
+    req.tenantId = decoded.tenantId;
     next();
   });
 };
