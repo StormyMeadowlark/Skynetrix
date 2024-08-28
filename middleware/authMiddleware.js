@@ -3,7 +3,9 @@ const jwt = require("jsonwebtoken");
 const authMiddleware = (req, res, next) => {
   const token = req.header("Authorization");
 
+  // Check if token is present and properly formatted
   if (!token || !token.startsWith("Bearer ")) {
+    console.log("[AUTH] No token provided or malformed token.");
     return res.status(401).json({ error: "No token provided." });
   }
 
@@ -15,10 +17,13 @@ const authMiddleware = (req, res, next) => {
       return res.status(401).json({ error: "Invalid token." });
     }
 
+    // Log the decoded token payload for debugging
     console.log("[AUTH] JWT verified successfully. Decoded payload:", decoded);
-    req.user = { _id: decoded.userId };
-    req.tenantId = decoded.tenantId;
-    next();
+
+    // Attach user details to the request object
+    req.user = { userId: decoded.userId, tenantId: decoded.tenantId };
+
+    next(); // Proceed to the next middleware or route handler
   });
 };
 

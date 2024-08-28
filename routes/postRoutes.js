@@ -20,6 +20,7 @@ router.post("/:tenantId", authMiddleware, async (req, res) => {
       `[API Gateway] Forwarding Authorization: ${req.header("Authorization")}`
     );
 
+    // Send request to the Post Service
     const response = await axios.post(
       `${POST_SERVICE_URL}/${req.params.tenantId}`,
       req.body,
@@ -30,12 +31,26 @@ router.post("/:tenantId", authMiddleware, async (req, res) => {
         },
       }
     );
+
+    // Respond with the response from the Post Service
     res.status(response.status).json(response.data);
   } catch (error) {
     console.error(
       "[API Gateway] Error forwarding create post request:",
       error.message
     );
+
+    // Log more details about the error
+    if (error.response) {
+      console.error(
+        "[API Gateway] Error response status:",
+        error.response.status
+      );
+      console.error("[API Gateway] Error response data:", error.response.data);
+    } else {
+      console.error("[API Gateway] No response received from Post Service.");
+    }
+
     res
       .status(error.response ? error.response.status : 500)
       .json(
