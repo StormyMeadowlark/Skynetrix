@@ -17,24 +17,44 @@ router.post("/", async (req, res) => {
   try {
     console.log("Starting tenant creation through API Gateway...");
 
+    // Check for required headers
+    const authHeader = req.header("Authorization");
+    const tenantIdHeader = req.header("x-tenant-id");
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      console.error("Authorization header is missing or improperly formatted.");
+      return res
+        .status(401)
+        .json({ error: "Unauthorized: Missing or malformed token." });
+    }
+
+    if (!tenantIdHeader) {
+      console.error("x-tenant-id header is missing.");
+      return res
+        .status(400)
+        .json({ error: "Bad Request: Missing x-tenant-id header." });
+    }
+
     const url = `${TENANT_SERVICE_URL}`;
     console.log("Target URL:", url);
-
     console.log("Request Body:", req.body);
-    console.log("Authorization Header:", req.header("Authorization"));
-    console.log("x-tenant-id Header:", req.header("x-tenant-id"));
+    console.log("Authorization Header:", authHeader);
+    console.log("x-tenant-id Header:", tenantIdHeader);
 
     const response = await axios.post(url, req.body, {
       headers: {
-        Authorization: req.header("Authorization"),
-        "x-tenant-id": req.header("x-tenant-id"),
+        Authorization: authHeader,
+        "x-tenant-id": tenantIdHeader,
       },
     });
 
     console.log("Tenant created successfully:", response.data);
     res.status(response.status).json(response.data);
   } catch (error) {
-    console.error("Error during tenant creation in API Gateway:", error.message);
+    console.error(
+      "Error during tenant creation in API Gateway:",
+      error.message
+    );
 
     if (error.response) {
       // Log the response details if available
@@ -44,7 +64,9 @@ router.post("/", async (req, res) => {
     }
 
     const status = error.response ? error.response.status : 500;
-    const data = error.response ? error.response.data : { message: "Error connecting to the Tenant Service" };
+    const data = error.response
+      ? error.response.data
+      : { message: "Error connecting to the Tenant Service" };
     res.status(status).json(data);
   }
 });
