@@ -42,9 +42,9 @@ const socialMediaRoutes = require("./routes/socialMediaRoutes");
 const tagRoutes = require("./routes/tagRoutes");
 
 // Integrate the user management routes
+app.use("/api/v1/posts", postRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1", tenantRoutes); 
-app.use("/api/v1/posts", postRoutes); 
 app.use("/api/v1/keys", apiKeyRoutes); // Protected route
 app.use("/api/v1/admin", adminRoutes); // Protected route
 app.use("/api/v1/media", mediaRoutes); // Protected route
