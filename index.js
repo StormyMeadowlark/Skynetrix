@@ -9,7 +9,18 @@ dotenv.config();
 
 const app = express();
 app.set("trust proxy", 1);
-app.use(cors())
+app.use(
+  cors({
+    origin: [
+      "https://hemautomotive.com",
+      "http://localhost:3000",
+      "https://stormymeadowlark.com",
+    ], // Replace with your frontend domain
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "x-tenant-id", "Authorization"], // Ensure 'x-tenant-id' is included
+  })
+);
+
 // Middleware
 app.use(morgan("dev"));
 app.use(express.json());
@@ -32,7 +43,8 @@ const tagRoutes = require("./routes/tagRoutes");
 
 // Integrate the user management routes
 app.use("/api/v1/users", userRoutes);
-app.use("/api/v1", tenantRoutes); // Protected route
+app.use("/api/v1", tenantRoutes); 
+app.use("/api/v1/posts", postRoutes); 
 app.use("/api/v1/keys", apiKeyRoutes); // Protected route
 app.use("/api/v1/admin", adminRoutes); // Protected route
 app.use("/api/v1/media", mediaRoutes); // Protected route
@@ -42,7 +54,7 @@ app.use("/api/v1/analytics", apiKeyMiddleware, analyticsRoutes); // Protected ro
 app.use("/api/v1/categories", apiKeyMiddleware, categoryRoutes); // Protected route
 app.use("/api/v1/comments", apiKeyMiddleware, commentRoutes); // Protected route
 app.use("/api/v1/newsletters", newsletterRoutes); // Protected route
-app.use("/api/v1/posts", postRoutes); // Protected route
+// Protected route
 app.use("/api/v1/social-media", apiKeyMiddleware, socialMediaRoutes); // Protected route
 app.use("/api/v1/tags", apiKeyMiddleware, tagRoutes);
 
