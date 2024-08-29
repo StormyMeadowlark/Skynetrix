@@ -4,20 +4,24 @@ const morgan = require("morgan");
 const dotenv = require("dotenv");
 const rateLimiter = require("./middleware/rateLimiterMiddleware");
 const apiKeyMiddleware = require("./middleware/apiKeyMiddleware");
-const cors = require("cors")
+const cors = require("cors");
 dotenv.config();
 
 const app = express();
 app.set("trust proxy", 1);
+
+// Corrected CORS configuration
 app.use(
   cors({
     origin: [
-      "https://hemautomotive.com/*",
-      "http://localhost:3000*",
-      "https://stormymeadowlark.com/*", "http://127.0.0.1:5173/*"
-    ], // Replace with your frontend domain
+      "https://hemautomotive.com",
+      "http://localhost:3000",
+      "https://stormymeadowlark.com",
+      "http://127.0.0.1:5173",
+    ], // Correctly list the allowed origins without wildcards
     methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "x-tenant-id", "Authorization"], // Ensure 'x-tenant-id' is included
+    allowedHeaders: ["Content-Type", "x-tenant-id", "Authorization"], // Ensure required headers are allowed
+    credentials: true, // Include this if you need to allow credentials (cookies, authorization headers)
   })
 );
 
@@ -32,7 +36,6 @@ const adminRoutes = require("./routes/adminRoutes");
 const apiKeyRoutes = require("./routes/apiKeyRoutes");
 const mediaRoutes = require("./routes/mediaRoutes");
 const tenantRoutes = require("./routes/tenantRoutes");
-
 const analyticsRoutes = require("./routes/analyticsRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const commentRoutes = require("./routes/commentRoutes");
@@ -44,7 +47,7 @@ const tagRoutes = require("./routes/tagRoutes");
 // Integrate the user management routes
 app.use("/api/v1/posts", postRoutes);
 app.use("/api/v1/users", userRoutes);
-app.use("/api/v1", tenantRoutes); 
+app.use("/api/v1", tenantRoutes);
 app.use("/api/v1/keys", apiKeyRoutes); // Protected route
 app.use("/api/v1/admin", adminRoutes); // Protected route
 app.use("/api/v1/media", mediaRoutes); // Protected route
@@ -54,7 +57,6 @@ app.use("/api/v1/analytics", apiKeyMiddleware, analyticsRoutes); // Protected ro
 app.use("/api/v1/categories", apiKeyMiddleware, categoryRoutes); // Protected route
 app.use("/api/v1/comments", apiKeyMiddleware, commentRoutes); // Protected route
 app.use("/api/v1/newsletters", newsletterRoutes); // Protected route
-// Protected route
 app.use("/api/v1/social-media", apiKeyMiddleware, socialMediaRoutes); // Protected route
 app.use("/api/v1/tags", apiKeyMiddleware, tagRoutes);
 
