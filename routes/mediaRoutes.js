@@ -89,19 +89,19 @@ router.post("/:tenantId/upload", upload.single("file"), async (req, res) => {
 
 // Route to get all media
 router.get("/:tenantId/", authMiddleware, async (req, res) => {
-  const url = `${MEDIA_SERVICE_URL}/${req.params.tenantId}/`;
+  const url = `${MEDIA_SERVICE_URL}/tenant/${req.params.tenantId}/`;
   await forwardRequest(req, res, "get", url);
 });
 
 // Route to get media by ID
 router.get("/:tenantId/:id", authMiddleware, async (req, res) => {
-  const url = `${MEDIA_SERVICE_URL}/${req.params.tenantId}/${req.params.id}`;
+  const url = `${MEDIA_SERVICE_URL}/${req.params.id}`;
   await forwardRequest(req, res, "get", url);
 });
 
 // Route to delete media by ID
 router.delete("/:tenantId/:id", authMiddleware, async (req, res) => {
-  const url = `${MEDIA_SERVICE_URL}/${req.params.tenantId}/${req.params.id}`;
+  const url = `${MEDIA_SERVICE_URL}/${req.params.id}`;
   await forwardRequest(req, res, "delete", url);
 });
 
