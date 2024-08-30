@@ -1,219 +1,108 @@
 const express = require("express");
 const router = express.Router();
 const axios = require("axios");
-const tenantMiddleware = require("../middleware/tenantMiddleware");
+const multer = require("multer");
+const FormData = require("form-data");
 const authMiddleware = require("../middleware/authMiddleware");
-const apiKeyMiddleware = require("../middleware/apiKeyMiddleware");
 
-const UM_MEDIA_SERVICE_URL =
-  process.env.UM_MEDIA_SERVICE_URL || "http://localhost:5000/api/media"; // Set this URL to point to your Media Service
 const MEDIA_SERVICE_URL =
-  process.env.MEDIA_SERVICE_URL || "http://localhost:5000/api/media";
+  process.env.MEDIA_SERVICE_URL || "http://localhost:5001/api/media";
 
-// Apply tenantMiddleware globally to ensure all routes are tenant-specific
-router.use("/:tenantId/*", tenantMiddleware);
+// Apply multer to handle file uploads
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
-// Route to upload media (secured route)
-router.post(
-  "/:tenantId/upload",
-  apiKeyMiddleware,
-  async (req, res) => {
-    try {
-      const url = `${UM_MEDIA_SERVICE_URL}/${req.tenantId}/upload`;
-      const response = await axios.post(url, req.body, {
-        headers: {
-          Authorization: req.header("Authorization"),
-          "x-api-key": req.header("x-api-key"),
-          "Content-Type": req.header("Content-Type"),
-        },
+// Apply authentication middleware to all routes
+router.use(authMiddleware);
+
+// Helper function for forwarding requests
+const forwardRequest = async (req, res, method, url) => {
+  try {
+    if (
+      method === "post" &&
+      req.headers["content-type"].startsWith("multipart/form-data")
+    ) {
+      // Handle file upload using FormData
+      const formData = new FormData();
+
+      if (req.file) {
+        // Add the file to the FormData object
+        formData.append("file", req.file.buffer, {
+          filename: req.file.originalname,
+          contentType: req.file.mimetype,
+        });
+
+        const headers = {
+          ...formData.getHeaders(),
+          Authorization: req.headers["authorization"],
+          "x-tenant-id": req.headers["x-tenant-id"],
+        };
+
+        const response = await axios({
+          method,
+          url,
+          headers,
+          data: formData,
+          maxContentLength: Infinity,
+          maxBodyLength: Infinity,
+          timeout: 120000, // Increase timeout to 120 seconds
+        });
+
+        res.status(response.status).json(response.data);
+      } else {
+        console.error("No file found in the request.");
+        return res.status(400).json({ message: "No file uploaded." });
+      }
+    } else {
+      // For non-file requests
+      const response = await axios({
+        method,
+        url,
+        headers: req.headers,
+        data: req.body,
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity,
+        timeout: 120000,
       });
-      res.status(response.status).json(response.data);
-    } catch (error) {
-      const status = error.response ? error.response.status : 500;
-      const data = error.response
-        ? error.response.data
-        : { message: "Error connecting to the Media Service" };
-      res.status(status).json(data);
-    }
-  }
-);
 
-// Route to get all media (secured route)
-router.get(
-  "/:tenantId/",
-  apiKeyMiddleware,
-  async (req, res) => {
-    try {
-      const url = `${UM_MEDIA_SERVICE_URL}/${req.tenantId}`;
-      const response = await axios.get(url, {
-        headers: {
-          Authorization: req.header("Authorization"),
-          "x-api-key": req.header("x-api-key"),
-        },
-      });
       res.status(response.status).json(response.data);
-    } catch (error) {
-      const status = error.response ? error.response.status : 500;
-      const data = error.response
-        ? error.response.data
-        : { message: "Error connecting to the Media Service" };
-      res.status(status).json(data);
     }
+  } catch (error) {
+    console.error(
+      `[ERROR] ${method.toUpperCase()} request failed:`,
+      error.message
+    );
+    res.status(error.response ? error.response.status : 500).json({
+      message: error.response
+        ? error.response.data
+        : "Error connecting to Media Service",
+    });
   }
-);
+};
 
-// Route to get media by ID (secured route)
-router.get(
-  "/:tenantId/:id",
-  apiKeyMiddleware,
-  async (req, res) => {
-    try {
-      const url = `${UM_MEDIA_SERVICE_URL}/${req.tenantId}/${req.params.id}`;
-      const response = await axios.get(url, {
-        headers: {
-          Authorization: req.header("Authorization"),
-          "x-api-key": req.header("x-api-key"),
-        },
-      });
-      res.status(response.status).json(response.data);
-    } catch (error) {
-      const status = error.response ? error.response.status : 500;
-      const data = error.response
-        ? error.response.data
-        : { message: "Error connecting to the Media Service" };
-      res.status(status).json(data);
-    }
-  }
-);
+// Route to upload media - apply multer middleware to handle file upload
+router.post("/:tenantId/upload", upload.single("file"), async (req, res) => {
+  console.log("Forwarding upload request to backend...");
+  const url = `${MEDIA_SERVICE_URL}/upload`;
+  await forwardRequest(req, res, "post", url);
+});
 
-// Route to delete media by ID (secured route)
-router.delete(
-  "/:tenantId/:id",
-  apiKeyMiddleware,
-  async (req, res) => {
-    try {
-      const url = `${UM_MEDIA_SERVICE_URL}/${req.tenantId}/${req.params.id}`;
-      const response = await axios.delete(url, {
-        headers: {
-          Authorization: req.header("Authorization"),
-          "x-api-key": req.header("x-api-key"),
-        },
-      });
-      res.status(response.status).json(response.data);
-    } catch (error) {
-      const status = error.response ? error.response.status : 500;
-      const data = error.response
-        ? error.response.data
-        : { message: "Error connecting to the Media Service" };
-      res.status(status).json(data);
-    }
-  }
-);
+// Route to get all media
+router.get("/:tenantId/", authMiddleware, async (req, res) => {
+  const url = `${MEDIA_SERVICE_URL}/${req.params.tenantId}/`;
+  await forwardRequest(req, res, "get", url);
+});
 
-// Forward request to upload media (secured route)
-router.post(
-  "/:tenantId/upload",
-  apiKeyMiddleware,
-  async (req, res) => {
-    try {
-      const response = await axios.post(
-        `${MEDIA_SERVICE_URL}/${req.tenantId}/upload`,
-        req.body,
-        {
-          headers: {
-            Authorization: req.header("Authorization"),
-            "Content-Type": req.header("Content-Type"),
-          },
-        }
-      );
-      res.status(response.status).json(response.data);
-    } catch (error) {
-      console.error("Error forwarding media upload request:", error.message);
-      const status = error.response ? error.response.status : 500;
-      const data = error.response
-        ? error.response.data
-        : { message: "Error connecting to Media Service" };
-      res.status(status).json(data);
-    }
-  }
-);
+// Route to get media by ID
+router.get("/:tenantId/:id", authMiddleware, async (req, res) => {
+  const url = `${MEDIA_SERVICE_URL}/${req.params.tenantId}/${req.params.id}`;
+  await forwardRequest(req, res, "get", url);
+});
 
-// Forward request to get all media (secured route)
-router.get(
-  "/:tenantId/",
-  apiKeyMiddleware,
-  async (req, res) => {
-    try {
-      const response = await axios.get(
-        `${MEDIA_SERVICE_URL}/${req.tenantId}/`,
-        {
-          headers: {
-            Authorization: req.header("Authorization"),
-          },
-        }
-      );
-      res.status(response.status).json(response.data);
-    } catch (error) {
-      console.error("Error forwarding get all media request:", error.message);
-      const status = error.response ? error.response.status : 500;
-      const data = error.response
-        ? error.response.data
-        : { message: "Error connecting to Media Service" };
-      res.status(status).json(data);
-    }
-  }
-);
-
-// Forward request to get media by ID (secured route)
-router.get(
-  "/:tenantId/:id",
-  apiKeyMiddleware,
-  async (req, res) => {
-    try {
-      const response = await axios.get(
-        `${MEDIA_SERVICE_URL}/${req.tenantId}/${req.params.id}`,
-        {
-          headers: {
-            Authorization: req.header("Authorization"),
-          },
-        }
-      );
-      res.status(response.status).json(response.data);
-    } catch (error) {
-      console.error("Error forwarding get media by ID request:", error.message);
-      const status = error.response ? error.response.status : 500;
-      const data = error.response
-        ? error.response.data
-        : { message: "Error connecting to Media Service" };
-      res.status(status).json(data);
-    }
-  }
-);
-
-// Forward request to delete media (secured route)
-router.delete(
-  "/:tenantId/:id",
-  apiKeyMiddleware,
-  async (req, res) => {
-    try {
-      const response = await axios.delete(
-        `${MEDIA_SERVICE_URL}/${req.tenantId}/${req.params.id}`,
-        {
-          headers: {
-            Authorization: req.header("Authorization"),
-          },
-        }
-      );
-      res.status(response.status).json(response.data);
-    } catch (error) {
-      console.error("Error forwarding delete media request:", error.message);
-      const status = error.response ? error.response.status : 500;
-      const data = error.response
-        ? error.response.data
-        : { message: "Error connecting to Media Service" };
-      res.status(status).json(data);
-    }
-  }
-);
+// Route to delete media by ID
+router.delete("/:tenantId/:id", authMiddleware, async (req, res) => {
+  const url = `${MEDIA_SERVICE_URL}/${req.params.tenantId}/${req.params.id}`;
+  await forwardRequest(req, res, "delete", url);
+});
 
 module.exports = router;
