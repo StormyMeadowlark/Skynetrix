@@ -69,14 +69,15 @@ router.get("/:tenantId/verify-email/:token", async (req, res) => {
 //works on localhost:3000
 router.post("/:tenantId/login", async (req, res) => {
   try {
-    const url = `${USERS_SERVICE_URL}/${req.params.tenantId}/login`;
+    const url = `${USERS_SERVICE_URL}/${req.params.tenantId}/login`; // Construct the URL for the User Management Service
     const headers = getHeaders(
       req.params.tenantId,
       null,
-      req.header("Content-Type")
+      req.header("Content-Type") // Set headers, including content type
     );
-    const response = await axios.post(url, req.body, { headers });
-    res.status(response.status).json(response.data);
+
+    const response = await axios.post(url, req.body, { headers }); // Forward request to User Management Service
+    res.status(response.status).json(response.data); // Respond with the result
   } catch (error) {
     const status = error.response ? error.response.status : 500;
     const data = error.response
@@ -85,6 +86,7 @@ router.post("/:tenantId/login", async (req, res) => {
     res.status(status).json(data);
   }
 });
+
 
 
 router.get("/:tenantId/profile", async (req, res) => {
