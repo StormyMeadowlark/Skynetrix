@@ -65,14 +65,20 @@ router.post("/:tenantId", authMiddleware, async (req, res) => {
 // Get all posts (published) for a specific tenant
 router.get("/:tenantId", async (req, res) => {
   try {
-    const response = await axios.get(
-      `${POST_SERVICE_URL}/${req.params.tenantId}`,
-      {
-        headers: {
-          "X-Tenant-Id": req.params.tenantId,
-        },
-      }
-    );
+    const status = req.query.status; // Get the status query parameter if provided
+    let url = `${POST_SERVICE_URL}/${req.params.tenantId}`;
+
+    // Append the status parameter to the URL if it's provided
+    if (status) {
+      url += `?status=${status}`;
+    }
+
+    const response = await axios.get(url, {
+      headers: {
+        "X-Tenant-Id": req.params.tenantId,
+      },
+    });
+
     res.status(response.status).json(response.data);
   } catch (error) {
     console.error("Error forwarding get all posts request:", error.message);
