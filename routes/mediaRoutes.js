@@ -87,6 +87,15 @@ router.post("/:tenantId/upload", upload.single("file"), async (req, res) => {
   await forwardRequest(req, res, "post", url);
 });
 
+
+// Route to update media metadata (like size)
+router.put("/:tenantId/update", authMiddleware, async (req, res) => {
+  console.log("Forwarding media metadata update request to backend...");
+  const url = `${MEDIA_SERVICE_URL}/update`;
+  await forwardRequest(req, res, "put", url);
+});
+
+
 // Route to get all media
 router.get("/:tenantId/", authMiddleware, async (req, res) => {
   const url = `${MEDIA_SERVICE_URL}/tenant/${req.params.tenantId}/`;
