@@ -57,7 +57,7 @@ app.use("/api/v1/admin", adminRoutes); // Protected route
 // CMS-related routes
 app.use("/api/v1/analytics", apiKeyMiddleware, analyticsRoutes); // Protected route
 app.use("/api/v1/categories", apiKeyMiddleware, categoryRoutes); // Protected route
-app.use("/api/v1/comments", apiKeyMiddleware, commentRoutes); // Protected route
+app.use("/api/v1/comments", commentRoutes); // Protected route
 app.use("/api/v1/newsletters", newsletterRoutes); // Protected route
 app.use("/api/v1/social-media", apiKeyMiddleware, socialMediaRoutes); // Protected route
 app.use("/api/v1/tags", apiKeyMiddleware, tagRoutes);
