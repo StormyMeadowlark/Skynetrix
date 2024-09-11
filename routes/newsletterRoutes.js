@@ -33,7 +33,7 @@ const getHeaders = (tenantId, token = null, contentType = null) => {
 // Create a new newsletter
 router.post("/:tenantId", async (req, res) => {
   try {
-    const url = `NEWSLETTER_SERVICE_URL/${req.params.tenantId}`;
+    const url = `${NEWSLETTER_SERVICE_URL}/${req.params.tenantId}`;
     const headers = getHeaders(
       req.params.tenantId,
       req.header("Authorization"),
