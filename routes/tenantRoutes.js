@@ -4,14 +4,53 @@ const axios = require("axios");
 const authMiddleware = require("../middleware/authMiddleware");
 const tenantMiddleware = require("../middleware/tenantMiddleware");
 
+
+
 const TENANT_SERVICE_URL =
   process.env.TENANT_SERVICE_URL || "http://localhost:5000/api/v1/tenants";
 
-// Apply the auth middleware globally to all routes that require authentication
-router.use(authMiddleware);
+
 
 // Routes for Tenant Management Service
 
+
+router.get("/verify-tenant", async (req, res) => {
+  try {
+    const tenantIdHeader = req.header("x-tenant-id");
+
+    if (!tenantIdHeader) {
+      console.error("x-tenant-id header is missing.");
+      return res
+        .status(400)
+        .json({ error: "Bad Request: Missing x-tenant-id header." });
+    }
+
+    console.log(
+      "Forwarding request to Tenant Management Service for tenant ID:",
+      tenantIdHeader
+    );
+
+    // Forward the request to the Tenant Management Service's verify-tenant endpoint
+    const response = await axios.get(`${TENANT_SERVICE_URL}/verify-tenant`, {
+      headers: {
+        "x-tenant-id": tenantIdHeader,
+      },
+    });
+
+    console.log("Tenant verification successful:", response.data);
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    console.error("Error during tenant verification:", error.message);
+
+    const status = error.response ? error.response.status : 500;
+    const data = error.response
+      ? error.response.data
+      : { message: "Error connecting to the Tenant Service" };
+    res.status(status).json(data);
+  }
+});
+// Apply the auth middleware globally to all routes that require authentication
+router.use(authMiddleware);
 // Create a tenant (requires SuperAdmin role)
 router.post("/", async (req, res) => {
   try {
@@ -101,14 +140,13 @@ router.get("/", authMiddleware, async (req, res) => {
 });
 
 // Get a specific tenant by ID
-router.get("/:id", authMiddleware, tenantMiddleware, async (req, res) => {
+router.get("/:id", tenantMiddleware, async (req, res) => {
   try {
     const url = `${TENANT_SERVICE_URL}/${req.params.id}`;
     console.log("Fetching tenant with ID:", req.params.id);
 
     const response = await axios.get(url, {
       headers: {
-        Authorization: req.header("Authorization"),
         "x-tenant-id": req.header("x-tenant-id"),
       },
     });
@@ -296,5 +334,7 @@ router.post(
     }
   }
 );
+
+
 
 module.exports = router;

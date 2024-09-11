@@ -44,21 +44,25 @@ const newsletterRoutes = require("./routes/newsletterRoutes");
 const postRoutes = require("./routes/postRoutes");
 const socialMediaRoutes = require("./routes/socialMediaRoutes");
 const tagRoutes = require("./routes/tagRoutes");
+const emailRoutes = require("./routes/emailRoutes");
 
 // Integrate the user management routes
+app.use("/api/v1/email", emailRoutes);
+app.use("/api/v1/newsletters", newsletterRoutes);
 app.use("/api/v1/posts", postRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/media", mediaRoutes);
 app.use("/api/v1", tenantRoutes);
 app.use("/api/v1/keys", apiKeyRoutes); // Protected route
-app.use("/api/v1/admin", adminRoutes); // Protected route
+app.use("/api/v1/admin", adminRoutes);
+; // Protected route
  // Protected route
 
 // CMS-related routes
 app.use("/api/v1/analytics", apiKeyMiddleware, analyticsRoutes); // Protected route
 app.use("/api/v1/categories", apiKeyMiddleware, categoryRoutes); // Protected route
 app.use("/api/v1/comments", commentRoutes); // Protected route
-app.use("/api/v1/newsletters", newsletterRoutes); // Protected route
+ // Protected route
 app.use("/api/v1/social-media", apiKeyMiddleware, socialMediaRoutes); // Protected route
 app.use("/api/v1/tags", apiKeyMiddleware, tagRoutes);
 

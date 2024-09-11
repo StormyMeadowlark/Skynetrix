@@ -1,39 +1,67 @@
 const express = require("express");
 const router = express.Router();
 const axios = require("axios");
+const tenantMiddleware = require("../middleware/tenantMiddleware");
+const authMiddleware = require("../middleware/authMiddleware");
 const dotenv = require("dotenv");
 dotenv.config();
 
-const apiKeyMiddleware = require("../middleware/apiKeyMiddleware");
-const authMiddleware = require("../middleware/authMiddleware"); // Import the auth middleware
-const tenantMiddleware = require("../middleware/tenantMiddleware"); // Import the tenant middleware
-
 const NEWSLETTER_SERVICE_URL =
   process.env.NEWSLETTER_SERVICE_URL || "http://localhost:5000/api/newsletters";
-const SUBSCRIBER_SERVICE_URL =
-  process.env.SUBSCRIBER_SERVICE_URL || "http://localhost:5000/api/subscribers";
-const SEND_NEWSLETTER_SERVICE_URL =
-  process.env.SEND_NEWSLETTER_SERVICE_URL ||
-  "http://localhost:5000/api/send-newsletter";
 
-// Apply tenantMiddleware globally to ensure all routes are tenant-specific
-router.use("/:tenantId/*", tenantMiddleware);
+// Function to get headers for each request
+const getHeaders = (tenantId, token = null, contentType = null) => {
+  const headers = {
+    "x-tenant-id": tenantId,
+  };
 
-// Forward request to create a new newsletter (secured route)
-router.post("/:tenantId/newsletters", async (req, res) => {
+  if (token) {
+    headers["Authorization"] = token.startsWith("Bearer ")
+      ? token
+      : `Bearer ${token}`;
+  }
+
+  if (contentType) {
+    headers["Content-Type"] = contentType;
+  }
+
+  return headers;
+};
+// Apply tenant middleware to all routes that include :tenantId
+
+
+// Create a new newsletter
+router.post("/:tenantId", async (req, res) => {
   try {
-    const response = await axios.post(
-      `${NEWSLETTER_SERVICE_URL}/${req.tenantId}/`,
-      req.body,
-      {
-        headers: {
-          Authorization: req.header("Authorization"),
-        },
-      }
+    const url = `NEWSLETTER_SERVICE_URL/${req.params.tenantId}`;
+    const headers = getHeaders(
+      req.params.tenantId,
+      req.header("Authorization"),
+      req.header("Content-Type")
     );
+
+    console.log("[CREATE NEWSLETTER] Forwarding request to:", url);
+    console.log("[CREATE NEWSLETTER] Headers:", headers);
+    console.log("[CREATE NEWSLETTER] Body:", req.body);
+
+    const response = await axios.post(url, req.body, { headers });
     res.status(response.status).json(response.data);
   } catch (error) {
     console.error("Error forwarding create newsletter request:", error.message);
+
+    if (error.response) {
+      console.error(
+        "[CREATE NEWSLETTER] Error response data:",
+        error.response.data
+      );
+      console.error(
+        "[CREATE NEWSLETTER] Error response status:",
+        error.response.status
+      );
+    } else {
+      console.error("[CREATE NEWSLETTER] No response from Newsletter Service");
+    }
+
     const status = error.response ? error.response.status : 500;
     const data = error.response
       ? error.response.data
@@ -42,60 +70,84 @@ router.post("/:tenantId/newsletters", async (req, res) => {
   }
 });
 
-// Forward request to update a newsletter (secured route)
-router.put(
-  "/:tenantId/newsletters/:id",
+// Update an existing newsletter
+router.put("/:tenantId/:id", authMiddleware, async (req, res) => {
+  try {
+    const url = `${NEWSLETTER_SERVICE_URL}/${req.params.tenantId}/${req.params.id}`;
+    const headers = getHeaders(
+      req.params.tenantId,
+      req.header("Authorization"),
+      req.header("Content-Type")
+    );
 
-  apiKeyMiddleware,
-  async (req, res) => {
-    try {
-      const response = await axios.put(
-        `${NEWSLETTER_SERVICE_URL}/${req.tenantId}/${req.params.id}`,
-        req.body,
-        {
-          headers: {
-            Authorization: req.header("Authorization"),
-            "x-api-key": req.header("x-api-key"),
-          },
-        }
-      );
-      res.status(response.status).json(response.data);
-    } catch (error) {
+    console.log("[UPDATE NEWSLETTER] Forwarding request to:", url);
+    console.log("[UPDATE NEWSLETTER] Headers:", headers);
+    console.log("[UPDATE NEWSLETTER] Body:", req.body);
+
+    const response = await axios.put(url, req.body, { headers });
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    console.error("Error forwarding update newsletter request:", error.message);
+
+    if (error.response) {
       console.error(
-        "Error forwarding update newsletter request:",
-        error.message
+        "[UPDATE NEWSLETTER] Error response data:",
+        error.response.data
       );
-      const status = error.response ? error.response.status : 500;
-      const data = error.response
-        ? error.response.data
-        : { message: "Error connecting to Newsletter Service" };
-      res.status(status).json(data);
+      console.error(
+        "[UPDATE NEWSLETTER] Error response status:",
+        error.response.status
+      );
+    } else {
+      console.error("[UPDATE NEWSLETTER] No response from Newsletter Service");
     }
+
+    const status = error.response ? error.response.status : 500;
+    const data = error.response
+      ? error.response.data
+      : { message: "Error connecting to Newsletter Service" };
+    res.status(status).json(data);
   }
-);
+});
 
-// Forward request to delete a newsletter (secured route)
+// Delete a newsletter
 router.delete(
-  "/:tenantId/newsletters/:id",
-
-  apiKeyMiddleware,
+  "/:tenantId/:id",
+  authMiddleware,
   async (req, res) => {
     try {
-      const response = await axios.delete(
-        `${NEWSLETTER_SERVICE_URL}/${req.tenantId}/${req.params.id}`,
-        {
-          headers: {
-            Authorization: req.header("Authorization"),
-            "x-api-key": req.header("x-api-key"),
-          },
-        }
+      const url = `${NEWSLETTER_SERVICE_URL}/${req.params.tenantId}/${req.params.id}`;
+      const headers = getHeaders(
+        req.params.tenantId,
+        req.header("Authorization")
       );
+
+      console.log("[DELETE NEWSLETTER] Forwarding request to:", url);
+      console.log("[DELETE NEWSLETTER] Headers:", headers);
+
+      const response = await axios.delete(url, { headers });
       res.status(response.status).json(response.data);
     } catch (error) {
       console.error(
         "Error forwarding delete newsletter request:",
         error.message
       );
+
+      if (error.response) {
+        console.error(
+          "[DELETE NEWSLETTER] Error response data:",
+          error.response.data
+        );
+        console.error(
+          "[DELETE NEWSLETTER] Error response status:",
+          error.response.status
+        );
+      } else {
+        console.error(
+          "[DELETE NEWSLETTER] No response from Newsletter Service"
+        );
+      }
+
       const status = error.response ? error.response.status : 500;
       const data = error.response
         ? error.response.data
@@ -105,121 +157,124 @@ router.delete(
   }
 );
 
-// Forward request to get a newsletter by ID (secured route)
-router.get(
-  "/:tenantId/newsletters/:id",
+// Get a newsletter by ID
+router.get("/:tenantId/:id", authMiddleware, async (req, res) => {
+  try {
+    const url = `${NEWSLETTER_SERVICE_URL}/${req.params.tenantId}/${req.params.id}`;
+    const headers = getHeaders(
+      req.params.tenantId,
+      req.header("Authorization")
+    );
 
-  apiKeyMiddleware,
-  async (req, res) => {
-    try {
-      const response = await axios.get(
-        `${NEWSLETTER_SERVICE_URL}/${req.tenantId}/${req.params.id}`,
-        {
-          headers: {
-            Authorization: req.header("Authorization"),
-            "x-api-key": req.header("x-api-key"),
-          },
-        }
-      );
-      res.status(response.status).json(response.data);
-    } catch (error) {
+    console.log("[GET NEWSLETTER] Forwarding request to:", url);
+    console.log("[GET NEWSLETTER] Headers:", headers);
+
+    const response = await axios.get(url, { headers });
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    console.error("Error forwarding get newsletter request:", error.message);
+
+    if (error.response) {
       console.error(
-        "Error forwarding get newsletter by ID request:",
-        error.message
+        "[GET NEWSLETTER] Error response data:",
+        error.response.data
       );
-      const status = error.response ? error.response.status : 500;
-      const data = error.response
-        ? error.response.data
-        : { message: "Error connecting to Newsletter Service" };
-      res.status(status).json(data);
-    }
-  }
-);
-
-// Forward request to get all newsletters (secured route)
-router.get(
-  "/:tenantId/newsletters",
-
-  apiKeyMiddleware,
-  async (req, res) => {
-    try {
-      const response = await axios.get(
-        `${NEWSLETTER_SERVICE_URL}/${req.tenantId}/`,
-        {
-          headers: {
-            Authorization: req.header("Authorization"),
-            "x-api-key": req.header("x-api-key"),
-          },
-        }
-      );
-      res.status(response.status).json(response.data);
-    } catch (error) {
       console.error(
-        "Error forwarding get all newsletters request:",
-        error.message
+        "[GET NEWSLETTER] Error response status:",
+        error.response.status
       );
-      const status = error.response ? error.response.status : 500;
-      const data = error.response
-        ? error.response.data
-        : { message: "Error connecting to Newsletter Service" };
-      res.status(status).json(data);
+    } else {
+      console.error("[GET NEWSLETTER] No response from Newsletter Service");
     }
+
+    const status = error.response ? error.response.status : 500;
+    const data = error.response
+      ? error.response.data
+      : { message: "Error connecting to Newsletter Service" };
+    res.status(status).json(data);
   }
-);
+});
 
-// Forward request to search newsletters (secured route)
-router.get(
-  "/:tenantId/newsletters/search",
+// Get all newsletters
+router.get("/:tenantId", authMiddleware, async (req, res) => {
+  try {
+    const url = `${NEWSLETTER_SERVICE_URL}/${req.params.tenantId}`;
+    const headers = getHeaders(
+      req.params.tenantId,
+      req.header("Authorization")
+    );
 
-  apiKeyMiddleware,
-  async (req, res) => {
-    try {
-      const response = await axios.get(
-        `${NEWSLETTER_SERVICE_URL}/${req.tenantId}/search`,
-        {
-          params: req.query,
-          headers: {
-            Authorization: req.header("Authorization"),
-            "x-api-key": req.header("x-api-key"),
-          },
-        }
-      );
-      res.status(response.status).json(response.data);
-    } catch (error) {
+    console.log("[GET ALL NEWSLETTERS] Forwarding request to:", url);
+    console.log("[GET ALL NEWSLETTERS] Headers:", headers);
+
+    const response = await axios.get(url, { headers });
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    console.error(
+      "Error forwarding get all newsletters request:",
+      error.message
+    );
+
+    if (error.response) {
       console.error(
-        "Error forwarding search newsletters request:",
-        error.message
+        "[GET ALL NEWSLETTERS] Error response data:",
+        error.response.data
       );
-      const status = error.response ? error.response.status : 500;
-      const data = error.response
-        ? error.response.data
-        : { message: "Error connecting to Newsletter Service" };
-      res.status(status).json(data);
+      console.error(
+        "[GET ALL NEWSLETTERS] Error response status:",
+        error.response.status
+      );
+    } else {
+      console.error(
+        "[GET ALL NEWSLETTERS] No response from Newsletter Service"
+      );
     }
-  }
-);
 
-// Forward request to send a newsletter (secured route)
+    const status = error.response ? error.response.status : 500;
+    const data = error.response
+      ? error.response.data
+      : { message: "Error connecting to Newsletter Service" };
+    res.status(status).json(data);
+  }
+});
+
+// Send a newsletter
 router.post(
-  "/:tenantId/newsletters/:id/send",
-
-  apiKeyMiddleware,
+  "/:tenantId/:id/send",
+  authMiddleware,
   async (req, res) => {
     try {
-      const response = await axios.post(
-        `${SEND_NEWSLETTER_SERVICE_URL}/${req.tenantId}/send/${req.params.id}`,
-        req.body,
-        {
-          headers: {
-            Authorization: req.header("Authorization"),
-            "x-api-key": req.header("x-api-key"),
-          },
-        }
+      const url = `${NEWSLETTER_SERVICE_URL}/${req.params.tenantId}/${req.params.id}/send`;
+      const headers = getHeaders(
+        req.params.tenantId,
+        req.header("Authorization"),
+        req.header("Content-Type")
       );
 
+      console.log("[SEND NEWSLETTER] Forwarding request to:", url);
+      console.log("[SEND NEWSLETTER] Headers:", headers);
+      console.log("[SEND NEWSLETTER] Body:", req.body);
+
+      const response = await axios.post(url, req.body, { headers });
       res.status(response.status).json(response.data);
     } catch (error) {
       console.error("Error forwarding send newsletter request:", error.message);
+
+      if (error.response) {
+        console.error(
+          "[SEND NEWSLETTER] Error response data:",
+          error.response.data
+        );
+        console.error(
+          "[SEND NEWSLETTER] Error response status:",
+          error.response.status
+        );
+      } else {
+        console.error(
+          "[SEND NEWSLETTER] No response from Send Newsletter Service"
+        );
+      }
+
       const status = error.response ? error.response.status : 500;
       const data = error.response
         ? error.response.data
@@ -229,155 +284,170 @@ router.post(
   }
 );
 
-// Forward request to schedule a newsletter (secured route)
-router.post(
-  "/:tenantId/newsletters/:id/schedule",
+// Subscribe a user
+router.post("/:tenantId/subscribe", tenantMiddleware, async (req, res) => {
+  try {
+    const url = `${NEWSLETTER_SERVICE_URL}/${req.params.tenantId}/subscribe`;
+    const headers = getHeaders(
+      req.params.tenantId,
+      req.header("Authorization"),
+      req.header("Content-Type")
+    );
 
-  apiKeyMiddleware,
-  async (req, res) => {
-    try {
-      const response = await axios.post(
-        `${NEWSLETTER_SERVICE_URL}/${req.tenantId}/${req.params.id}/schedule`,
-        req.body,
-        {
-          headers: {
-            Authorization: req.header("Authorization"),
-            "x-api-key": req.header("x-api-key"),
-          },
-        }
-      );
-      res.status(response.status).json(response.data);
-    } catch (error) {
+    console.log("[SUBSCRIBE USER] Forwarding request to:", url);
+    console.log("[SUBSCRIBE USER] Headers:", headers);
+    console.log("[SUBSCRIBE USER] Body:", req.body);
+
+    const response = await axios.post(url, req.body, { headers });
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    console.error("Error forwarding subscribe user request:", error.message);
+
+    if (error.response) {
       console.error(
-        "Error forwarding schedule newsletter request:",
-        error.message
+        "[SUBSCRIBE USER] Error response data:",
+        error.response.data
       );
-      const status = error.response ? error.response.status : 500;
-      const data = error.response
-        ? error.response.data
-        : { message: "Error connecting to Newsletter Service" };
-      res.status(status).json(data);
-    }
-  }
-);
-
-// Forward request to subscribe a user (secured route)
-router.post(
-  "/:tenantId/subscribers",
-
-  apiKeyMiddleware,
-  async (req, res) => {
-    try {
-      const response = await axios.post(
-        `${SUBSCRIBER_SERVICE_URL}/${req.tenantId}/`,
-        req.body,
-        {
-          headers: {
-            Authorization: req.header("Authorization"),
-            "x-api-key": req.header("x-api-key"),
-          },
-        }
-      );
-      res.status(response.status).json(response.data);
-    } catch (error) {
-      console.error("Error forwarding subscribe request:", error.message);
-      const status = error.response ? error.response.status : 500;
-      const data = error.response
-        ? error.response.data
-        : { message: "Error connecting to Subscriber Service" };
-      res.status(status).json(data);
-    }
-  }
-);
-
-// Forward request to unsubscribe a user (secured route)
-router.delete(
-  "/:tenantId/subscribers/:id",
-
-  apiKeyMiddleware,
-  async (req, res) => {
-    try {
-      const response = await axios.delete(
-        `${SUBSCRIBER_SERVICE_URL}/${req.tenantId}/${req.params.id}`,
-        {
-          headers: {
-            Authorization: req.header("Authorization"),
-            "x-api-key": req.header("x-api-key"),
-          },
-        }
-      );
-      res.status(response.status).json(response.data);
-    } catch (error) {
-      console.error("Error forwarding unsubscribe request:", error.message);
-      const status = error.response ? error.response.status : 500;
-      const data = error.response
-        ? error.response.data
-        : { message: "Error connecting to Subscriber Service" };
-      res.status(status).json(data);
-    }
-  }
-);
-
-// Forward request to get all subscribers (secured route)
-router.get(
-  "/:tenantId/subscribers",
-
-  apiKeyMiddleware,
-  async (req, res) => {
-    try {
-      const response = await axios.get(
-        `${SUBSCRIBER_SERVICE_URL}/${req.tenantId}/`,
-        {
-          headers: {
-            Authorization: req.header("Authorization"),
-            "x-api-key": req.header("x-api-key"),
-          },
-        }
-      );
-      res.status(response.status).json(response.data);
-    } catch (error) {
       console.error(
-        "Error forwarding get all subscribers request:",
-        error.message
+        "[SUBSCRIBE USER] Error response status:",
+        error.response.status
       );
-      const status = error.response ? error.response.status : 500;
-      const data = error.response
-        ? error.response.data
-        : { message: "Error connecting to Subscriber Service" };
-      res.status(status).json(data);
+    } else {
+      console.error("[SUBSCRIBE USER] No response from Subscriber Service");
     }
+
+    const status = error.response ? error.response.status : 500;
+    const data = error.response
+      ? error.response.data
+      : { message: "Error connecting to Subscriber Service" };
+    res.status(status).json(data);
   }
-);
+});
 
-// Forward request to get a subscriber by ID (secured route)
-router.get(
-  "/:tenantId/subscribers/:id",
+// Unsubscribe a user
+router.post("/:tenantId/unsubscribe/", tenantMiddleware, async (req, res) => {
+  try {
+    // Construct the URL to forward the request to the newsletter service
+    const url = `${NEWSLETTER_SERVICE_URL}/${req.params.tenantId}/unsubscribe`;
 
-  apiKeyMiddleware,
-  async (req, res) => {
-    try {
-      const response = await axios.get(
-        `${SUBSCRIBER_SERVICE_URL}/${req.tenantId}/${req.params.id}`,
-        {
-          headers: {
-            Authorization: req.header("Authorization"),
-            "x-api-key": req.header("x-api-key"),
-          },
-        }
-      );
-      res.status(response.status).json(response.data);
-    } catch (error) {
+    // Get headers from the helper function
+    const headers = getHeaders(
+      req.params.tenantId,
+      req.header("Authorization")
+    );
+
+    console.log("[UNSUBSCRIBE USER] Forwarding request to:", url);
+    console.log("[UNSUBSCRIBE USER] Headers:", headers);
+    console.log("[UNSUBSCRIBE USER] Body:", req.body); // Ensure the request body is logged
+
+    // Forward the request to the newsletter service
+    const response = await axios.post(url, req.body, { headers }); // Include the body with the headers
+
+    // Return the response from the newsletter service
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    console.error("Error forwarding unsubscribe user request:", error.message);
+
+    if (error.response) {
       console.error(
-        "Error forwarding get subscriber by ID request:",
-        error.message
+        "[UNSUBSCRIBE USER] Error response data:",
+        error.response.data
       );
-      const status = error.response ? error.response.status : 500;
-      const data = error.response
-        ? error.response.data
-        : { message: "Error connecting to Subscriber Service" };
-      res.status(status).json(data);
+      console.error(
+        "[UNSUBSCRIBE USER] Error response status:",
+        error.response.status
+      );
+    } else {
+      console.error("[UNSUBSCRIBE USER] No response from Subscriber Service");
     }
+
+    const status = error.response ? error.response.status : 500;
+    const data = error.response
+      ? error.response.data
+      : { message: "Error connecting to Subscriber Service" };
+    res.status(status).json(data);
   }
-);
+});
+
+// Get all subscribers
+router.get("/:tenantId/subscribers", authMiddleware, async (req, res) => {
+  try {
+    const url = `${NEWSLETTER_SERVICE_URL}/${req.params.tenantId}/subscribers`;
+    const headers = getHeaders(
+      req.params.tenantId,
+      req.header("Authorization")
+    );
+
+    console.log("[GET ALL SUBSCRIBERS] Forwarding request to:", url);
+    console.log("[GET ALL SUBSCRIBERS] Headers:", headers);
+
+    const response = await axios.get(url, { headers });
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    console.error(
+      "Error forwarding get all subscribers request:",
+      error.message
+    );
+
+    if (error.response) {
+      console.error(
+        "[GET ALL SUBSCRIBERS] Error response data:",
+        error.response.data
+      );
+      console.error(
+        "[GET ALL SUBSCRIBERS] Error response status:",
+        error.response.status
+      );
+    } else {
+      console.error(
+        "[GET ALL SUBSCRIBERS] No response from Subscriber Service"
+      );
+    }
+
+    const status = error.response ? error.response.status : 500;
+    const data = error.response
+      ? error.response.data
+      : { message: "Error connecting to Subscriber Service" };
+    res.status(status).json(data);
+  }
+});
+
+// Get a subscriber by ID
+router.get("/:tenantId/subscribers/:id", authMiddleware, async (req, res) => {
+  try {
+    const url = `${NEWSLETTER_SERVICE_URL}/${req.params.tenantId}/${req.params.id}`;
+    const headers = getHeaders(
+      req.params.tenantId,
+      req.header("Authorization")
+    );
+
+    console.log("[GET SUBSCRIBER] Forwarding request to:", url);
+    console.log("[GET SUBSCRIBER] Headers:", headers);
+
+    const response = await axios.get(url, { headers });
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    console.error("Error forwarding get subscriber request:", error.message);
+
+    if (error.response) {
+      console.error(
+        "[GET SUBSCRIBER] Error response data:",
+        error.response.data
+      );
+      console.error(
+        "[GET SUBSCRIBER] Error response status:",
+        error.response.status
+      );
+    } else {
+      console.error("[GET SUBSCRIBER] No response from Subscriber Service");
+    }
+
+    const status = error.response ? error.response.status : 500;
+    const data = error.response
+      ? error.response.data
+      : { message: "Error connecting to Subscriber Service" };
+    res.status(status).json(data);
+  }
+});
 
 module.exports = router;
