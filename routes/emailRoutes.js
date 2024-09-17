@@ -150,4 +150,40 @@ router.delete(
   }
 );
 
+router.post("/:tenantId/contact", async (req, res) => {
+  try {
+    const { tenantId } = req.params;
+    const { name, email, message } = req.body; // Extract contact form data from request body
+
+    // Basic validation of form data
+    if (!name || !email || !message) {
+      return res
+        .status(400)
+        .json({ error: "All fields (name, email, message) are required." });
+    }
+
+    // Prepare headers
+    const headers = getHeaders(tenantId, null, "application/json");
+
+    // Define the URL for the contact email endpoint in the email service
+    const url = `${EMAIL_SERVICE_URL}/${tenantId}/contact`;
+
+    // Forward the contact form data to the email service
+    const response = await axios.post(
+      url,
+      { name, email, message },
+      { headers }
+    );
+
+    // Respond with the status and data from the email service
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    console.error("Error forwarding contact form request:", error.message);
+    res
+      .status(500)
+      .json({ error: "Error forwarding request to email service." });
+  }
+});
+
+
 module.exports = router;
