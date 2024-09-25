@@ -273,6 +273,7 @@ router.post("/:tenantId/reset-password/:token", async (req, res) => {
   console.log("Received reset password request for tenant:", tenantId);
   console.log("Received reset token:", token);
 
+  // Check if tenantId or token is missing
   if (!tenantId || !token) {
     return res
       .status(400)
@@ -280,17 +281,21 @@ router.post("/:tenantId/reset-password/:token", async (req, res) => {
   }
 
   try {
-    // Construct the URL to call the users service
+    // Construct the URL for the user service (dynamically fetch USERS_SERVICE_URL if necessary)
     const url = `${USERS_SERVICE_URL}/${tenantId}/reset-password/${token}`;
 
-    // Assuming getHeaders generates necessary headers, including Content-Type, Tenant-ID, etc.
-    const headers = getHeaders(tenantId, null, req.header("Content-Type"));
+    // Ensure the x-tenant-id header is included
+    const headers = {
+      "x-tenant-id": tenantId,
+      "Content-Type": req.header("Content-Type") || "application/json", // Default to JSON if not provided
+    };
 
+    // Log the URL, headers, and request body for debugging
     console.log("Sending reset password request to:", url);
     console.log("Request headers:", headers);
     console.log("Request body:", req.body);
 
-    // Make the request to the users service
+    // Make the request to the user management service
     const response = await axios.post(url, req.body, { headers });
 
     // Log the response from the user service
@@ -300,7 +305,7 @@ router.post("/:tenantId/reset-password/:token", async (req, res) => {
     // Return the same response from the user service
     return res.status(response.status).json(response.data);
   } catch (error) {
-    // Handle error case, log for debugging
+    // Log the error details for debugging
     console.error("Error during reset password request:", error.message);
 
     if (error.response) {
