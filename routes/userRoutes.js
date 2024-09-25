@@ -265,24 +265,42 @@ router.post("/:tenantId/forgot-password", async (req, res) => {
 });
 
 // Reset password
-router.post("/:tenantId/reset-password", async (req, res) => {
+router.post("/:tenantId/reset-password/:token", async (req, res) => {
   const tenantId = req.params.tenantId;
+  const token = req.params.token;
+
+  // Log received tenant ID and token
   console.log("Received reset password request for tenant:", tenantId);
+  console.log("Received reset token:", token);
+
+  if (!tenantId || !token) {
+    return res
+      .status(400)
+      .json({ message: "Tenant ID and Token are required." });
+  }
+
   try {
-    const url = `${USERS_SERVICE_URL}/${tenantId}/reset-password`;
+    // Construct the URL to call the users service
+    const url = `${USERS_SERVICE_URL}/${tenantId}/reset-password/${token}`;
+
+    // Assuming getHeaders generates necessary headers, including Content-Type, Tenant-ID, etc.
     const headers = getHeaders(tenantId, null, req.header("Content-Type"));
 
     console.log("Sending reset password request to:", url);
     console.log("Request headers:", headers);
     console.log("Request body:", req.body);
 
+    // Make the request to the users service
     const response = await axios.post(url, req.body, { headers });
 
+    // Log the response from the user service
     console.log("Response status:", response.status);
     console.log("Response data:", response.data);
 
-    res.status(response.status).json(response.data);
+    // Return the same response from the user service
+    return res.status(response.status).json(response.data);
   } catch (error) {
+    // Handle error case, log for debugging
     console.error("Error during reset password request:", error.message);
 
     if (error.response) {
@@ -294,7 +312,8 @@ router.post("/:tenantId/reset-password", async (req, res) => {
       ? error.response.data
       : { message: "Error connecting to User Management Service" };
 
-    res.status(status).json(data);
+    // Return error response
+    return res.status(status).json(data);
   }
 });
 
