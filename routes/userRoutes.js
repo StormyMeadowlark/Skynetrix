@@ -47,9 +47,6 @@ router.post("/:tenantId/register", async (req, res) => {
   }
 });
 
-
-
-
 router.get("/:tenantId/verify-email/:token", async (req, res) => {
   try {
     const url = `${USERS_SERVICE_URL}/${req.params.tenantId}/verify-email/${req.params.token}`;
@@ -86,8 +83,6 @@ router.post("/:tenantId/login", async (req, res) => {
     res.status(status).json(data);
   }
 });
-
-
 
 router.get("/:tenantId/profile", async (req, res) => {
   try {
@@ -203,8 +198,6 @@ router.put("/:tenantId/profile", async (req, res) => {
       .json({ error: "Error connecting to User Management Service" });
   }
 });
-
-
 
 // Change user password
 router.post("/:tenantId/change-password", async (req, res) => {
@@ -396,52 +389,509 @@ router.delete("/:tenantId/user/:userId", async (req, res) => {
   }
 });
 
+router.get("/:tenantId", async (req, res) => {
+  try {
+    const tenantId = req.params.tenantId;
+    const authorization = req.header("Authorization"); // Forward the Authorization header
 
+    // Log incoming request details
+    console.log("Received request to fetch all users:");
+    console.log("Tenant ID from URL:", tenantId);
+    console.log("Authorization header:", authorization);
 
+    // Headers to be forwarded to the user management service
+    const headers = {
+      Authorization: authorization,
+      "x-tenant-id": tenantId,
+    };
 
+    // Log the headers that will be forwarded
+    console.log("Forwarding headers to User Management Service:", headers);
 
+    const url = `${USERS_SERVICE_URL}/${tenantId}`; // Adjust the endpoint as needed
+    console.log("Request URL for User Management Service:", url);
+
+    // Forward the request to the user management service
+    const response = await axios.get(url, { headers });
+
+    // Log the response status and data
+    console.log(
+      "Response from User Management Service:",
+      response.status,
+      response.data
+    );
+
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    // Log the error details
+    console.error("Error in API Gateway:", error.message);
+
+    if (error.response) {
+      console.error(
+        "Error response from User Management Service:",
+        error.response.data
+      );
+      console.error(
+        "Status code from User Management Service:",
+        error.response.status
+      );
+    } else {
+      console.error("No response received from User Management Service.");
+    }
+
+    const status = error.response ? error.response.status : 500;
+    res
+      .status(status)
+      .json({ error: "Error connecting to User Management Service" });
+  }
+});
+
+router.get("/:tenantId/:userId", async (req, res) => {
+  try {
+    const tenantId = req.params.tenantId; // Get tenant ID from URL
+    const userId = req.params.userId; // Get user ID from URL
+    const authorization = req.header("Authorization"); // Forward the Authorization header
+
+    // Log incoming request details
+    console.log("Received request to fetch user by ID:");
+    console.log("Tenant ID from URL:", tenantId);
+    console.log("User ID from URL:", userId);
+    console.log("Authorization header:", authorization);
+
+    // Headers to be forwarded to the user management service
+    const headers = {
+      Authorization: authorization,
+      "x-tenant-id": tenantId,
+    };
+
+    // Log the headers that will be forwarded
+    console.log("Forwarding headers to User Management Service:", headers);
+
+    const url = `${USERS_SERVICE_URL}/${tenantId}/${userId}`; // Adjust the endpoint as needed
+    console.log("Request URL for User Management Service:", url);
+
+    // Forward the request to the user management service
+    const response = await axios.get(url, { headers });
+
+    // Log the response status and data
+    console.log(
+      "Response from User Management Service:",
+      response.status,
+      response.data
+    );
+
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    // Log the error details
+    console.error("Error in API Gateway:", error.message);
+
+    if (error.response) {
+      console.error(
+        "Error response from User Management Service:",
+        error.response.data
+      );
+      console.error(
+        "Status code from User Management Service:",
+        error.response.status
+      );
+    } else {
+      console.error("No response received from User Management Service.");
+    }
+
+    const status = error.response ? error.response.status : 500;
+    res
+      .status(status)
+      .json({ error: "Error connecting to User Management Service" });
+  }
+});
+
+router.put("/:tenantId/:userId", async (req, res) => {
+  try {
+    const tenantId = req.params.tenantId; // Get tenant ID from URL
+    const userId = req.params.userId; // Get user ID from URL
+    const authorization = req.header("Authorization"); // Forward the Authorization header
+
+    // Log incoming request details
+    console.log("Received request to update user:");
+    console.log("Tenant ID from URL:", tenantId);
+    console.log("User ID from URL:", userId);
+    console.log("Authorization header:", authorization);
+
+    // Headers to be forwarded to the user management service
+    const headers = {
+      Authorization: authorization,
+      "x-tenant-id": tenantId,
+    };
+
+    // Log the headers that will be forwarded
+    console.log("Forwarding headers to User Management Service:", headers);
+
+    const url = `${USERS_SERVICE_URL}/${tenantId}/${userId}`; // Adjust the endpoint as needed
+    console.log("Request URL for User Management Service:", url);
+
+    // Forward the request to the user management service
+    const response = await axios.put(url, req.body, { headers });
+
+    // Log the response status and data
+    console.log(
+      "Response from User Management Service:",
+      response.status,
+      response.data
+    );
+
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    // Log the error details
+    console.error("Error in API Gateway:", error.message);
+
+    if (error.response) {
+      console.error(
+        "Error response from User Management Service:",
+        error.response.data
+      );
+      console.error(
+        "Status code from User Management Service:",
+        error.response.status
+      );
+    } else {
+      console.error("No response received from User Management Service.");
+    }
+
+    const status = error.response ? error.response.status : 500;
+    res
+      .status(status)
+      .json({ error: "Error connecting to User Management Service" });
+  }
+});
+
+router.post("/:tenantId/:userId", async (req, res) => {
+  try {
+    const tenantId = req.params.tenantId; // Get tenant ID from URL
+    const userId = req.params.userId; // Get user ID from URL
+    const authorization = req.header("Authorization"); // Forward the Authorization header
+
+    // Log incoming request details
+    console.log("Received request to update user role:");
+    console.log("Tenant ID from URL:", tenantId);
+    console.log("User ID from URL:", userId);
+    console.log("Authorization header:", authorization);
+
+    // Headers to be forwarded to the user management service
+    const headers = {
+      Authorization: authorization,
+      "x-tenant-id": tenantId,
+    };
+
+    // Log the headers that will be forwarded
+    console.log("Forwarding headers to User Management Service:", headers);
+
+    const url = `${USERS_SERVICE_URL}/${tenantId}/${userId}`; // Adjust the endpoint as needed
+    console.log("Request URL for User Management Service:", url);
+
+    // Forward the request to the user management service
+    const response = await axios.put(url, req.body, { headers });
+
+    // Log the response status and data
+    console.log(
+      "Response from User Management Service:",
+      response.status,
+      response.data
+    );
+
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    // Log the error details
+    console.error("Error in API Gateway:", error.message);
+
+    if (error.response) {
+      console.error(
+        "Error response from User Management Service:",
+        error.response.data
+      );
+      console.error(
+        "Status code from User Management Service:",
+        error.response.status
+      );
+    } else {
+      console.error("No response received from User Management Service.");
+    }
+
+    const status = error.response ? error.response.status : 500;
+    res
+      .status(status)
+      .json({ error: "Error connecting to User Management Service" });
+  }
+});
+
+router.put("/:tenantId/:userId/activate", async (req, res) => {
+  try {
+    const tenantId = req.params.tenantId; // Get tenant ID from URL
+    const userId = req.params.userId; // Get user ID from URL
+    const authorization = req.header("Authorization"); // Forward the Authorization header
+
+    // Log incoming request details
+    console.log("Received request to activate user:");
+    console.log("Tenant ID from URL:", tenantId);
+    console.log("User ID from URL:", userId);
+    console.log("Authorization header:", authorization);
+
+    // Headers to be forwarded to the user management service
+    const headers = {
+      Authorization: authorization,
+      "x-tenant-id": tenantId,
+    };
+
+    // Log the headers that will be forwarded
+    console.log("Forwarding headers to User Management Service:", headers);
+
+    const url = `${USERS_SERVICE_URL}/${tenantId}/${userId}/activate`; // Adjust the endpoint as needed
+    console.log("Request URL for User Management Service:", url);
+
+    // Forward the request to the user management service
+    const response = await axios.put(url, {}, { headers });
+
+    // Log the response status and data
+    console.log(
+      "Response from User Management Service:",
+      response.status,
+      response.data
+    );
+
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    // Log the error details
+    console.error("Error in API Gateway:", error.message);
+
+    if (error.response) {
+      console.error(
+        "Error response from User Management Service:",
+        error.response.data
+      );
+      console.error(
+        "Status code from User Management Service:",
+        error.response.status
+      );
+    } else {
+      console.error("No response received from User Management Service.");
+    }
+
+    const status = error.response ? error.response.status : 500;
+    res
+      .status(status)
+      .json({ error: "Error connecting to User Management Service" });
+  }
+});
+
+router.put("/:tenantId/:userId/deactivate", async (req, res) => {
+  try {
+    const tenantId = req.params.tenantId; // Get tenant ID from URL
+    const userId = req.params.userId; // Get user ID from URL
+    const authorization = req.header("Authorization"); // Forward the Authorization header
+
+    // Log incoming request details
+    console.log("Received request to deactivate user:");
+    console.log("Tenant ID from URL:", tenantId);
+    console.log("User ID from URL:", userId);
+    console.log("Authorization header:", authorization);
+
+    // Headers to be forwarded to the user management service
+    const headers = {
+      Authorization: authorization,
+      "x-tenant-id": tenantId,
+    };
+
+    // Construct the URL for the user management service
+    const url = `${USERS_SERVICE_URL}/${tenantId}/${userId}/deactivate`;
+    console.log("Request URL for User Management Service:", url);
+
+    // Forward the request to the user management service
+    const response = await axios.put(url, {}, { headers });
+
+    // Log the response status and data
+    console.log(
+      "Response from User Management Service:",
+      response.status,
+      response.data
+    );
+
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    console.error("Error in API Gateway:", error.message);
+    const status = error.response ? error.response.status : 500;
+    res
+      .status(status)
+      .json({ error: "Error connecting to User Management Service" });
+  }
+});
+
+router.put("/:tenantId/:userId/suspend", async (req, res) => {
+  try {
+    const tenantId = req.params.tenantId; // Get tenant ID from URL
+    const userId = req.params.userId; // Get user ID from URL
+    const authorization = req.header("Authorization"); // Forward the Authorization header
+
+    // Log incoming request details
+    console.log("Received request to suspend user:");
+    console.log("Tenant ID from URL:", tenantId);
+    console.log("User ID from URL:", userId);
+    console.log("Authorization header:", authorization);
+
+    // Headers to be forwarded to the user management service
+    const headers = {
+      Authorization: authorization,
+      "x-tenant-id": tenantId,
+    };
+
+    // Construct the URL for the user management service
+    const url = `${USERS_SERVICE_URL}/${tenantId}/${userId}/suspend`;
+    console.log("Request URL for User Management Service:", url);
+
+    // Forward the request to the user management service
+    const response = await axios.put(url, {}, { headers });
+
+    // Log the response status and data
+    console.log(
+      "Response from User Management Service:",
+      response.status,
+      response.data
+    );
+
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    console.error("Error in API Gateway:", error.message);
+    const status = error.response ? error.response.status : 500;
+    res
+      .status(status)
+      .json({ error: "Error connecting to User Management Service" });
+  }
+});
+
+router.post("/:tenantId/:userId/refresh-token", async (req, res) => {
+  try {
+    const { tenantId, userId } = req.params; // Extract tenantId and userId from URL parameters
+    const authorization = req.header("Authorization"); // Forward the Authorization header
+
+    // Log incoming request details
+    console.log("Received request to refresh token:");
+    console.log("Tenant ID from URL:", tenantId);
+    console.log("User ID from URL:", userId);
+    console.log("Authorization header:", authorization);
+
+    // Check if the Authorization header is provided
+    if (!authorization || !authorization.startsWith("Bearer ")) {
+      return res.status(400).json({ error: "Refresh token is required" });
+    }
+
+    const token = authorization.split(" ")[1]; // Extract the token from the header
+
+    // Optionally check for token expiration before proceeding
+
+    // Headers to be forwarded to the user management service
+    const headers = {
+      Authorization: authorization,
+      "x-tenant-id": tenantId,
+    };
+
+    // Construct the URL for the user management service
+    const url = `${USERS_SERVICE_URL}/${tenantId}/${userId}/refresh-token`; // Adjust based on your user management service
+
+    // Log the URL for the User Management Service
+    console.log("Request URL for User Management Service:", url);
+
+    // Forward the request to the user management service
+    const response = await axios.post(url, { token }, { headers });
+
+    // Log the response status and data
+    console.log(
+      "Response from User Management Service:",
+      response.status,
+      response.data
+    );
+
+    // Check for response validity if necessary
+    if (response.data && response.data.token) {
+      return res.status(response.status).json(response.data);
+    } else {
+      return res
+        .status(400)
+        .json({ error: "Invalid response from user management service." });
+    }
+  } catch (error) {
+    console.error("Error in API Gateway:", error.message);
+
+    if (error.response) {
+      console.error(
+        "Error response from User Management Service:",
+        error.response.data
+      );
+      console.error(
+        "Status code from User Management Service:",
+        error.response.status
+      );
+    } else {
+      console.error("No response received from User Management Service.");
+    }
+
+    const status = error.response ? error.response.status : 500;
+    res
+      .status(status)
+      .json({ error: "Error connecting to User Management Service" });
+  }
+});
 
 
 //untested routes
 
 // Search for users
-router.get("/:tenantId/search", async (req, res) => {
-  try {
-    const url = `${USERS_SERVICE_URL}/${req.params.tenantId}/search`;
-    const headers = getHeaders(req.params.tenantId);
-    const response = await axios.get(url, {
-      headers,
-      params: req.query,
-    });
-    res.status(response.status).json(response.data);
-  } catch (error) {
-    const status = error.response ? error.response.status : 500;
-    const data = error.response
-      ? error.response.data
-      : { message: "Error connecting to User Management Service" };
-    res.status(status).json(data);
-  }
-});
+
 
 // Resend verification email
 router.post("/:tenantId/resend-verification-email", async (req, res) => {
   try {
+    // Validate input
+    if (!req.body.email) {
+      return res.status(400).json({ error: "Email is required" });
+    }
+
+    // Construct the URL for the User Management Service
     const url = `${USERS_SERVICE_URL}/${req.params.tenantId}/resend-verification-email`;
+
+    // Prepare headers for the request
     const headers = getHeaders(
-      req.params.tenantId,
-      null,
-      req.header("Content-Type")
+      req.params.tenantId, // Extract tenant ID from URL
+      req.header("Authorization"), // Include authorization token
+      req.header("Content-Type") // Content type if needed
     );
+
+    // Log incoming request
+    console.log("Received request to resend verification email:", req.body);
+
+    // Forward the request to the user management service
     const response = await axios.post(url, req.body, { headers });
+
+    // Log the response from the user management service
+    console.log(
+      "Response from User Management Service:",
+      response.status,
+      response.data
+    );
+
+    // Send back the response to the original client
     res.status(response.status).json(response.data);
   } catch (error) {
+    // Determine the response status
     const status = error.response ? error.response.status : 500;
     const data = error.response
       ? error.response.data
       : { message: "Error connecting to User Management Service" };
+
+    // Log the error for debugging
+    console.error("Error in resend verification email route:", error.message);
     res.status(status).json(data);
   }
 });
+
+
 
 // Upload profile picture
 router.post("/:tenantId/upload-profile-picture", async (req, res) => {
