@@ -212,6 +212,18 @@ router.post("/:tenantId/change-password", async (req, res) => {
     const tenantId = req.params.tenantId;
     const authorization = req.header("Authorization");
 
+    // Validate if Authorization header is provided
+    if (!authorization) {
+      return res
+        .status(401)
+        .json({ error: "Authorization header is required" });
+    }
+
+    // Validate tenantId
+    if (!tenantId) {
+      return res.status(400).json({ error: "Tenant ID is required" });
+    }
+
     // Forward headers to user management service
     const headers = {
       Authorization: authorization,
@@ -219,15 +231,24 @@ router.post("/:tenantId/change-password", async (req, res) => {
     };
 
     const url = `${USERS_SERVICE_URL}/${tenantId}/change-password`;
+
+    // Send request to the User Management Service
     const response = await axios.post(url, req.body, { headers });
 
-    res.status(response.status).json(response.data);
+    // Return the same response from the user management service
+    return res.status(response.status).json(response.data);
   } catch (error) {
+    // Handle errors
     console.error("Error in change password route:", error.message);
+
     const status = error.response ? error.response.status : 500;
-    res
-      .status(status)
-      .json({ error: "Error connecting to User Management Service" });
+    const message =
+      error.response && error.response.data
+        ? error.response.data.error || "Error in User Management Service"
+        : "Error connecting to User Management Service";
+
+    // Send the error response
+    return res.status(status).json({ error: message });
   }
 });
 
