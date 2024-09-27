@@ -45,10 +45,12 @@ const postRoutes = require("./routes/postRoutes");
 const socialMediaRoutes = require("./routes/socialMediaRoutes");
 const tagRoutes = require("./routes/tagRoutes");
 const emailRoutes = require("./routes/emailRoutes");
+const organizationRoutes = require("./routes/organizationRoutes");
 
 // Integrate the user management routes
 app.use("/api/v1/email", emailRoutes);
 app.use("/api/v1/newsletters", newsletterRoutes);
+app.use("/api/v1/organization", organizationRoutes);
 app.use("/api/v1/posts", postRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/media", mediaRoutes);

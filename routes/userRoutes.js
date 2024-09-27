@@ -28,21 +28,47 @@ const getHeaders = (tenantId, token = null, contentType = null) => {
 };
 
 // Public routes (No auth required)
-router.post("/:tenantId/register", async (req, res) => {
+router.post("/:tenantId/resend-verification-email", async (req, res) => {
   try {
-    const url = `${USERS_SERVICE_URL}/${req.params.tenantId}/register`;
+    // Validate input
+    if (!req.body.email) {
+      return res.status(400).json({ error: "Email is required" });
+    }
+
+    // Construct the URL for the User Management Service
+    const url = `${USERS_SERVICE_URL}/${req.params.tenantId}/resend-verification-email`;
+
+    // Prepare headers for the request
     const headers = getHeaders(
-      req.params.tenantId,
-      null,
-      req.header("Content-Type")
+      req.params.tenantId, // Extract tenant ID from URL
+      req.header("Authorization")?.replace("Bearer ", ""), // Correctly include authorization token
+      req.header("Content-Type") // Content type if needed
     );
+
+    // Log incoming request
+    console.log("Received request to resend verification email:", req.body);
+
+    // Forward the request to the user management service
     const response = await axios.post(url, req.body, { headers });
+
+    // Log the response from the user management service
+    console.log(
+      "Response from User Management Service:",
+      response.status,
+      response.data
+    );
+
+    // Send back the response to the original client
     res.status(response.status).json(response.data);
   } catch (error) {
+    // Determine the response status
     const status = error.response ? error.response.status : 500;
     const data = error.response
       ? error.response.data
       : { message: "Error connecting to User Management Service" };
+
+    // Log the error for debugging
+    console.error("Error in resend verification email route:", error.message);
     res.status(status).json(data);
   }
 });
@@ -846,50 +872,7 @@ router.post("/:tenantId/:userId/refresh-token", async (req, res) => {
 
 
 // Resend verification email
-router.post("/:tenantId/resend-verification-email", async (req, res) => {
-  try {
-    // Validate input
-    if (!req.body.email) {
-      return res.status(400).json({ error: "Email is required" });
-    }
 
-    // Construct the URL for the User Management Service
-    const url = `${USERS_SERVICE_URL}/${req.params.tenantId}/resend-verification-email`;
-
-    // Prepare headers for the request
-    const headers = getHeaders(
-      req.params.tenantId, // Extract tenant ID from URL
-      req.header("Authorization"), // Include authorization token
-      req.header("Content-Type") // Content type if needed
-    );
-
-    // Log incoming request
-    console.log("Received request to resend verification email:", req.body);
-
-    // Forward the request to the user management service
-    const response = await axios.post(url, req.body, { headers });
-
-    // Log the response from the user management service
-    console.log(
-      "Response from User Management Service:",
-      response.status,
-      response.data
-    );
-
-    // Send back the response to the original client
-    res.status(response.status).json(response.data);
-  } catch (error) {
-    // Determine the response status
-    const status = error.response ? error.response.status : 500;
-    const data = error.response
-      ? error.response.data
-      : { message: "Error connecting to User Management Service" };
-
-    // Log the error for debugging
-    console.error("Error in resend verification email route:", error.message);
-    res.status(status).json(data);
-  }
-});
 
 
 
