@@ -19,6 +19,7 @@ app.use(
       "https://stormymeadowlark.com",
       "http://127.0.0.1:5173",
       "https://skynetrix.tech",
+      "http://localhost:4000",
     ], // Correctly list the allowed origins without wildcards
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "x-tenant-id", "Authorization"], // Ensure required headers are allowed
@@ -46,6 +47,8 @@ const socialMediaRoutes = require("./routes/socialMediaRoutes");
 const tagRoutes = require("./routes/tagRoutes");
 const emailRoutes = require("./routes/emailRoutes");
 const organizationRoutes = require("./routes/organizationRoutes");
+const vehicleRoutes = require("./routes/vehicleRoutes");
+const vehicleMediaRoutes = require("./routes/vehicleMediaRoutes")
 
 // Integrate the user management routes
 app.use("/api/v1/email", emailRoutes);
@@ -53,6 +56,8 @@ app.use("/api/v1/newsletters", newsletterRoutes);
 app.use("/api/v1/organization", organizationRoutes);
 app.use("/api/v1/posts", postRoutes);
 app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/vehicles", vehicleRoutes);
+app.use("/api/v1/vehicle-media", vehicleMediaRoutes);
 app.use("/api/v1/media", mediaRoutes);
 app.use("/api/v1", tenantRoutes);
 app.use("/api/v1/keys", apiKeyRoutes); // Protected route
