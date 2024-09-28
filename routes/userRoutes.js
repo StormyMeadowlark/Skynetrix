@@ -28,6 +28,40 @@ const getHeaders = (tenantId, token = null, contentType = null) => {
 };
 
 // Public routes (No auth required)
+
+router.post("/:tenantId/register", async (req, res) => {
+  try {
+    const url = `${USERS_SERVICE_URL}/${req.params.tenantId}/register`; // Construct the URL for the User Management Service
+
+    // Forward the request body and headers to the user management service
+    const headers = getHeaders(
+      req.params.tenantId,
+      null,
+      req.header("Content-Type") // Set headers, including content type
+    );
+
+    // Log the request to user management service
+    console.log("Registering new user at:", url);
+    console.log("Request body:", req.body);
+    console.log("Request headers:", headers);
+
+    // Make the request to the User Management Service
+    const response = await axios.post(url, req.body, { headers });
+
+    // Return the response from the User Management Service
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    // Log error
+    console.error("Error during user registration:", error.message);
+
+    const status = error.response ? error.response.status : 500;
+    const data = error.response
+      ? error.response.data
+      : { message: "Error connecting to User Management Service" };
+
+    res.status(status).json(data);
+  }
+});
 router.post("/:tenantId/resend-verification-email", async (req, res) => {
   try {
     // Validate input
