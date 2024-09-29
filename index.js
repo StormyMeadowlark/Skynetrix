@@ -8,6 +8,8 @@ const cors = require("cors");
 dotenv.config();
 
 const app = express();
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.set("trust proxy", 1);
 
 // Corrected CORS configuration
@@ -29,7 +31,6 @@ app.use(
 
 // Middleware
 app.use(morgan("dev"));
-app.use(express.json());
 app.use(rateLimiter); // Apply the rate limiter to all requests
 
 // Routes
@@ -48,7 +49,8 @@ const tagRoutes = require("./routes/tagRoutes");
 const emailRoutes = require("./routes/emailRoutes");
 const organizationRoutes = require("./routes/organizationRoutes");
 const vehicleRoutes = require("./routes/vehicleRoutes");
-const vehicleMediaRoutes = require("./routes/vehicleMediaRoutes")
+const vehicleMediaRoutes = require("./routes/vehicleMediaRoutes");
+const saleRoutes = require("./routes/salesRoutes"); 
 
 // Integrate the user management routes
 app.use("/api/v1/email", emailRoutes);
@@ -58,11 +60,12 @@ app.use("/api/v1/posts", postRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/vehicles", vehicleRoutes);
 app.use("/api/v1/vehicle-media", vehicleMediaRoutes);
+app.use("/api/v1/sales", saleRoutes);
 app.use("/api/v1/media", mediaRoutes);
 app.use("/api/v1", tenantRoutes);
 app.use("/api/v1/keys", apiKeyRoutes); // Protected route
 app.use("/api/v1/admin", adminRoutes);
-; // Protected route
+ // Protected route
  // Protected route
 
 // CMS-related routes
