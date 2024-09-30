@@ -53,7 +53,7 @@ router.post(
     await forwardToSalesService(
       req,
       res,
-      `/${req.params.tenantId}/${req.params.vehicleId}`,
+      `/${req.params.tenantId}`,
       "POST",
       req.body
     );
