@@ -47,7 +47,7 @@ const forwardToSalesService = async (
 
 // Add sale details for a vehicle (Admin, SuperAdmin, SalesRep)
 router.post(
-  "/:tenantId/:vehicleId",
+  "/:tenantId",
   authMiddleware,
   async (req, res) => {
     await forwardToSalesService(
