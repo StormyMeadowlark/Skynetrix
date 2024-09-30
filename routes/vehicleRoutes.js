@@ -71,22 +71,37 @@ router.get("/:tenantId", authMiddleware, async (req, res) => {
 // Get details for a specific vehicle
 router.get("/:tenantId/:vehicleId", authMiddleware, async (req, res) => {
   try {
+    // Build the microservice URL for the vehicle
     const url = `${VEHICLE_SERVICE_URL}/${req.params.tenantId}/${req.params.vehicleId}`;
+
+    // Get the Authorization and tenant headers
     const headers = getHeaders(
       req.params.tenantId,
       req.header("Authorization")
     );
 
+    // Log the URL and headers being sent to the vehicle service for debugging
+    console.log("Forwarding request to:", url);
+    console.log("Headers being sent:", headers);
+
+    // Send the request to the vehicle service
     const response = await axios.get(url, { headers });
+
+    // Return the vehicle data received from the vehicle service
     res.status(response.status).json(response.data);
   } catch (error) {
+    // Log the error details for easier debugging
+    console.error("Error connecting to Vehicle Service:", error.message);
+
     const status = error.response ? error.response.status : 500;
     const data = error.response
       ? error.response.data
       : { message: "Error connecting to Vehicle Service" };
+
+    // Return the error response to the client
     res.status(status).json(data);
   }
-});
+});;
 
 // Update a vehicle
 router.patch("/:tenantId/:vehicleId", authMiddleware, async (req, res) => {
