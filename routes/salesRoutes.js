@@ -15,19 +15,18 @@ const forwardToSalesService = async (
     const tenantId = req.headers["x-tenant-id"];
     const authToken = req.headers.authorization;
 
-    if (!authToken) {
-      return res
-        .status(401)
-        .json({ message: "Authorization token is missing" });
+    const headers = {
+      "x-tenant-id": tenantId,
+    };
+
+    if (authToken) {
+      headers["Authorization"] = authToken;
     }
 
     const options = {
       method: method,
       url: `${process.env.SALES_SERVICE_URL}${path}`,
-      headers: {
-        Authorization: authToken,
-        "x-tenant-id": tenantId,
-      },
+      headers: headers,
       ...(data && { data }),
     };
 
@@ -37,11 +36,9 @@ const forwardToSalesService = async (
     console.error(
       `[ERROR] Forwarding request to Sales Service: ${error.message}`
     );
-    res
-      .status(error.response?.status || 500)
-      .json({
-        message: error.response?.data?.message || "Internal Server Error",
-      });
+    res.status(error.response?.status || 500).json({
+      message: error.response?.data?.message || "Internal Server Error",
+    });
   }
 };
 
@@ -63,7 +60,6 @@ router.post(
 // Get sale details for a specific vehicle (Admin, SuperAdmin, SalesRep)
 router.get(
   "/:tenantId/:vehicleId",
-  authMiddleware,
   async (req, res) => {
     await forwardToSalesService(
       req,

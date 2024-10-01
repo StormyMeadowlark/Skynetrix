@@ -45,12 +45,11 @@ router.post("/:tenantId", authMiddleware, async (req, res) => {
 });
 
 // Get all vehicles for a tenant
-router.get("/:tenantId", authMiddleware, async (req, res) => {
+router.get("/:tenantId", async (req, res) => {
   try {
     const url = `${VEHICLE_SERVICE_URL}/${req.params.tenantId}`;
     const headers = getHeaders(
       req.params.tenantId,
-      req.header("Authorization")
     );
 
     const response = await axios.get(url, {
@@ -69,7 +68,7 @@ router.get("/:tenantId", authMiddleware, async (req, res) => {
 });
 
 // Get details for a specific vehicle
-router.get("/:tenantId/:vehicleId", authMiddleware, async (req, res) => {
+router.get("/:tenantId/:vehicleId", async (req, res) => {
   try {
     // Build the microservice URL for the vehicle
     const url = `${VEHICLE_SERVICE_URL}/${req.params.tenantId}/${req.params.vehicleId}`;
@@ -77,7 +76,6 @@ router.get("/:tenantId/:vehicleId", authMiddleware, async (req, res) => {
     // Get the Authorization and tenant headers
     const headers = getHeaders(
       req.params.tenantId,
-      req.header("Authorization")
     );
 
     // Log the URL and headers being sent to the vehicle service for debugging

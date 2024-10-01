@@ -106,12 +106,11 @@ router.post(
   }
 );
 // **2. Get all photos/documents for a vehicle**
-router.get("/:tenantId/:vehicleId", authMiddleware, async (req, res) => {
+router.get("/:tenantId/:vehicleId", async (req, res) => {
   try {
     const url = `${VEHICLE_MEDIA_SERVICE_URL}/${req.params.tenantId}/${req.params.vehicleId}`;
     const headers = getHeaders(
       req.params.tenantId,
-      req.header("Authorization")
     );
 
     const response = await axios.get(url, { headers });
