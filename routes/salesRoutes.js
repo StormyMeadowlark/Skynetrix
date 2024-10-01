@@ -101,7 +101,6 @@ router.delete(
 // Get all sales for a tenant (Admin, SuperAdmin, SalesRep)
 router.get(
   "/:tenantId",
-  authMiddleware,
   async (req, res) => {
     await forwardToSalesService(req, res, `/${req.params.tenantId}`);
   }
@@ -110,7 +109,6 @@ router.get(
 // Filter sales by status (Admin, SuperAdmin, SalesRep)
 router.get(
   "/:tenantId/status/:status",
-  authMiddleware,
   async (req, res) => {
     await forwardToSalesService(
       req,
