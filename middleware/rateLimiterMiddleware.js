@@ -11,7 +11,7 @@ function getClientIp(req) {
 
 // Create a rate limiter with custom settings
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 5 * 60 * 1000, // 15 minutes
   max: 100, // Limit each IP to 100 requests per window per 15 minutes
   message: {
     error: "Too many requests",
