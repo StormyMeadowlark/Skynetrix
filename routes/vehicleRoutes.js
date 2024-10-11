@@ -85,15 +85,30 @@ router.get("/:tenantId/:vehicleId", async (req, res) => {
     const url = `${VEHICLE_SERVICE_URL}/${req.params.tenantId}/${req.params.vehicleId}`;
     const headers = getHeaders(req.params.tenantId);
 
-    // Send the request to the vehicle service
-    const response = await axios.get(url, { headers });
+    // Logging the outgoing request details
+    console.log(`Making request to: ${url} with headers:`, headers);
+
+    // Send the request to the vehicle service (with a timeout for safety)
+    const response = await axios.get(url, { headers, timeout: 5000 });
+
+    // Log the successful response
+    console.log("Response status:", response.status);
+    console.log("Response data:", response.data);
+
+    // Return the vehicle data back to the client
     res.status(response.status).json(response.data);
   } catch (error) {
-    const status = error.response ? error.response.status : 500;
-    const data = error.response
-      ? error.response.data
-      : { message: "Error connecting to Vehicle Service" };
-    res.status(status).json(data);
+    // Log the error with more details
+    console.error("Error fetching vehicle data:", error.message);
+
+    // If the error is from the response (like 404 or 500 from the microservice)
+    if (error.response) {
+      console.error("Response data:", error.response.data);
+      return res.status(error.response.status).json(error.response.data);
+    }
+
+    // If it's another error (like network issues), return a general error
+    res.status(500).json({ message: "Error connecting to Vehicle Service" });
   }
 });
 
