@@ -30,7 +30,7 @@ const getHeaders = (tenantId, token = null) => {
 router.post(
   "/:tenantId",
   authMiddleware,
-  upload.array("media", 40), // Accept multiple files with the field name "media"
+  upload.array("media", 100), // Accept multiple files with the field name "media"
   async (req, res) => {
     try {
       const url = `${VEHICLE_MEDIA_SERVICE_URL}/${req.params.tenantId}`;
